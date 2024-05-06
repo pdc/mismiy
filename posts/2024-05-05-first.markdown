@@ -1,0 +1,13 @@
+title: Test post for Mismiy
+
+This is the first post for Mismiy, yet another static blog generator.
+
+My aim is to make a minimalistic blog maker using:
+
+- Mustache for templating layouts (Python package: Chevron)
+- Markdown for converting text to HTML (Python package: mistletoe)
+- Strict yaml for post metadata (Python package: strictyaml)
+
+No need for CSS generators like LESS; modern CSS is powerful enough we don’t need it.
+
+Future iterations will add more metadata and allow for other sources of data.

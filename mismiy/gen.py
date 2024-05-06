@@ -1,0 +1,57 @@
+from pathlib import Path
+from collections.abc import Mapping
+from typing import Any
+
+from chevron import render
+
+from .posts import Loader
+
+
+class Gen:
+    def __init__(self, tpl_dir: Path | str):
+        self.tpl_dir = Path(tpl_dir)
+        self.partials = {
+            self.fname(file): file.read_text()
+            for file in self.tpl_dir.glob("**/*.mustache")
+        }
+
+    def render_to(self, loader: Loader, public_path: Path | str):
+        """Generate HTML files in the specified directory."""
+        public_path = Path(public_path)
+        if not public_path.exists():
+            public_path.mkdir()
+        self.render_posts(loader, public_path)
+        self.render_index(loader, public_path)
+
+    def render_posts(self, loader: Loader, public_path: Path):
+        for post in loader.posts():
+            self._render_1(
+                public_path, f"{post.name}.html", post.context(), "post.html"
+            )
+
+    def render_index(self, loader: Loader, public_path: Path):
+        self._render_1(
+            public_path,
+            "index.html",
+            {
+                "reverse_chronological": [
+                    post.context() for post in reversed(loader.posts())
+                ],
+            },
+        )
+
+    def _render_1(
+        self,
+        public_path: Path,
+        name: str,
+        context: Mapping[str, Any],
+        tpl_name: str = None,
+    ):
+        out_file = public_path / name
+        html = render(
+            self.partials[tpl_name or name], context, partials_dict=self.partials
+        )
+        out_file.write_text(html, encoding="UTF-8")
+
+    def fname(self, file: Path) -> str:
+        return str(file.relative_to(self.tpl_dir)).removesuffix(".mustache")

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset=UTF-8>
+        <title>{{ title }}</title>
+        <style>
+            .text p {
+                max-width: 72ch;
+            }
+        </style>
+
+    </head>
+    <body>
+        <nav><a href="{{^ dotdotslash }}./{{/ dotdotslash }}{{ dotdotslash }}">&larr; Posts</a></nav>
+        <article>
+            <header><h1>{{ title }}</h1></header>
+            <div class="text">
+            {{{ body }}}
+            </div>
+        </article>
+    </body>
+</html>

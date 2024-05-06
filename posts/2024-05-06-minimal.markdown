@@ -1,0 +1,40 @@
+title: Minimal blog
+published: 2024-05-06
+
+The least possible blog is a page per post with title and body text, and 
+an index page that has a reverse-chronological list of links to posts. Without
+adding support for static files the options for styling the pages are very
+limited, but we can embed a stylesheet in the pages for a first approximation.
+
+the least possible implementation is a command, which for now is `mismiy`
+(pronounced ‘miss me?’). It consumes _posts_ (in [Markdown][] prefixed with YAML
+metadata) and templates (in [Mustache][] format) and writes HTML. By default
+these are files in directories named `posts`, `partials`, and `pub`.
+
+```sh
+mismiy -o pub -p partials posts
+```
+
+You can view the result as a web site by, for example, running Python’s
+simple web server there:
+
+```sh
+cd pub; python -m http.server
+```
+
+The code is written in Python in test-first fashion, though the code is pretty
+simple so far—I spent more time trying to decide which Markdown library to
+use than writing the code that uses it.
+
+Obvious future features include:
+- static files, such a style sheets;
+- other data, such as a blogroll;
+- non-post pages, such as an about page;
+- a ‘watch’ mode for `mismiy` that regenerates the blog when files are edted;
+- publication dates, controlling when posts are publicly visible;
+- feeds;
+- tags and categorization.
+
+
+[markdown]: https://commonmark.org
+[mustache]: http://mustache.github.io
