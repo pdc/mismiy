@@ -52,6 +52,9 @@ class Loader:
         self.post_dir = Path(post_dir)
         self._posts = None
 
+    def flush(self):
+        self._posts = None
+
     def posts(self):
         if self._posts is not None:
             return self._posts

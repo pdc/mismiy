@@ -18,6 +18,7 @@ class GeneratingEventHandler(FileSystemEventHandler):
 
     def again(self):
         start = time.perf_counter()
+        self.loader.flush()
         self.gen.render_to(self.loader, self.out_dir)
         duration = time.perf_counter() - start
         print(f"Generated again in {duration:.2f}s.")
