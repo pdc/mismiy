@@ -1,0 +1,11 @@
+title: Watch mode for mismiy
+
+The `mismiy` command now has a `--watch` option that causes it to monitor
+the posts and partials directories for changes, and re-renders the site
+when files are modified, added, or deleted. The idea is you run 
+
+    mismiy posts --watch
+
+in one window, and the web server in another, and then as you edit the posts
+or the templates, the site is kept up to date. You still need to refresh
+the page in the browser to see changes. 

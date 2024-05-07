@@ -35,6 +35,8 @@ Obvious future features include:
 - feeds;
 - tags and categorization.
 
+And many more.
+
 
 [markdown]: https://commonmark.org
 [mustache]: http://mustache.github.io
