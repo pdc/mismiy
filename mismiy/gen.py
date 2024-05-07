@@ -10,6 +10,10 @@ from .posts import Loader
 class Gen:
     def __init__(self, tpl_dir: Path | str):
         self.tpl_dir = Path(tpl_dir)
+        self.flush_tpls()
+
+    def flush_tpls(self):
+        """Discard cached templates and reload."""
         self.partials = {
             self.fname(file): file.read_text()
             for file in self.tpl_dir.glob("**/*.mustache")
