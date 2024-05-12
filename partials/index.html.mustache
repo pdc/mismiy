@@ -3,16 +3,58 @@
     <head>
         <meta charset=UTF-8>
         <title>Index</title>
+        <style>
+            {{> inline.css }}
+
+            body h1 {
+                    margin: 0;
+                    font-size: 1em;
+                    font-weight: 500;
+            }
+            body menu {
+                margin: 0;
+                padding: 0;
+            }
+
+
+            @media (min-width: 36em) {
+                p.text {
+                    grid-column: 2 / span 2;
+                }
+                body h1 {
+                    grid-column: 2;
+                }
+                body menu {
+                    grid-column: 3;
+
+                    & li {
+                        display: block;
+                        margin: 0 0 0.625em;
+
+                        & a {
+                            display: block;
+                        }
+                    }
+
+
+                }
+
+            }
+        </style>
     </head>
     <body>
-        <h1>Index</h1>
-        <ul>
+        {{> header.html }}
+        <p class="text">
+            Mismiy is yet another static site generator.
+        </p>
+        <h1>Blog index</h1>
+        <menu>
             {{# reverse_chronological }}
             <li>
                 <a href="{{ href }}">{{ title }}</a>
             </li>
             {{/ reverse_chronological }}
-        </ul>
+        </menu>
     </body>
 </html>
     

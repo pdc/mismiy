@@ -5,68 +5,38 @@
         <title>{{ title }}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>
-            body {
-                font-family: "Palatino Linotype", "Palatino", "Palladio", "URW Palladio L", "Book Antiqua", serif;
-                font-size: 16px;
-                line-height: 1.25;
+            {{> inline.css }}
 
-                color-scheme: light dark;
-                color: CanvasText;
-                background-color: Canvas;
+            article h1 {
+                margin: 1.25em 0 0.5em;
+                font-size: 2em;
+                font-weight: 500;
             }
-            @media (min-width: 576px) {
-                body {
-                    display: grid;
-                    grid-template-columns: 1fr 12em minmax(24em, 36em) 1fr;
+            @media (max-width: 36em) {
+                article {
+                    margin-right: 1rem;
+                    margin-left: 1rem;
                 }
-                body > header {
-                    grid-column: 1 / span 4;
-
-                    & menu {
-                        display: flex;
-                        gap: 1em;
-
-                        & li {
-                            display: block;
-
-                            & a {
-                                display: block;
-                            }
-                        }
-                    }
-
-                }
+            }
+            @media (min-width: 36em) {
                 article {
                     grid-column: 2 / span 2;
-
                     display: grid;
                     grid-template-columns: subgrid;
 
                     & > header {
                         grid-column: 1 / span 2;
-
-                        & h1 {
-                            font-size: 2em;
-                            margin: 1.25em 0 0.5em;
-                        }
                     }
 
                     & .text {
                         grid-column: 2;
                     }
+                }
             }
         </style>
-
     </head>
     <body>
-        <header>
-            <nav>
-                <menu>
-                    <li><a href="{{^ dotdotslash }}./{{/ dotdotslash }}{{ dotdotslash }}">Mismiy Blog</a></li>
-                    <li><a href="https://github.com/pdc/mismiy">On GitHub</a></li>
-                </menu>
-            </nav>
-        </header>
+        {{> header.html }}
         <article>
             <header><h1>{{ title }}</h1></header>
             <div class="text">
