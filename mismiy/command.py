@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from pathlib import Path
+import shutil
 import sys
 import time
 
@@ -62,6 +63,31 @@ class TemplateFlushingEventHandler(FileSystemEventHandler):
         self.again()
 
 
+class CopyingEventHandler(FileSystemEventHandler):
+    def __init__(self, static_dir: Path, out_dir: Path):
+        self.static_dir = Path(static_dir).absolute()
+        self.out_dir = out_dir
+
+    def again(self, changed_file: Path | str):
+        start = time.perf_counter()
+
+        # We need to calculate the corresponding path in the out dir.
+        changed_file = Path(changed_file).absolute()
+        relative_path = changed_file.relative_to(self.static_dir)
+        shutil.copy2(changed_file, self.out_dir / relative_path)
+
+        duration = time.perf_counter() - start
+        print(f"Updated {self.out_dir / relative_path} in {duration:.2f}s.")
+
+    def on_created(self, event):
+        # for now we regenerate everything; this saves us having to work out dependencies.
+        self.again(event.src_path)
+
+    def on_modified(self, event):
+        # for now we regenerate everything; this saves us having to work out dependencies.
+        self.again(event.src_path)
+
+
 def main():
     arg_parser = ArgumentParser(description="Generate HTML from posts.")
     arg_parser.add_argument(
@@ -111,6 +137,11 @@ def main():
         observer.schedule(posts_handler, args.posts_dir, recursive=True)
         tpl_handler = TemplateFlushingEventHandler(gen, loader, Path(args.out_dir))
         observer.schedule(tpl_handler, args.partials_dir, recursive=True)
+        if args.static_dir:
+            static_handler = CopyingEventHandler(
+                Path(args.static_dir), Path(args.out_dir)
+            )
+            observer.schedule(static_handler, args.static_dir, recursive=True)
 
         observer.start()
         try:
