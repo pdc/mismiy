@@ -1,3 +1,39 @@
-:root {
-    
+@media (prefers-color-scheme: light) {
+    :root {
+        --paper: #FFF;
+        --ink: rgb(0 0 0 / 0.8);
+        --link: #39F;
+        --visted: #639;
+    }
 }
+@media (prefers-color-scheme: dark) {
+    :root {
+        --paper: #110;
+        --ink: rgb(255 255 255 / 0.9);
+        --link: #C60;
+        --visted: #9C6;
+    }
+}
+
+body {
+    color: var(--ink);
+    background-color: var(--paper);
+}
+
+.text a:link, .text a:hover, .text a:active {
+    color: var(--link);
+}
+.text a:visited {
+    color: var(--visted);
+}
+
+
+menu a:link, menu a:visited {
+    color: inherit;
+    text-decoration: inherit;
+}
+menu a:hover, menu a:active {
+    color: var(--link);
+    text-decoration: underline;
+}
+

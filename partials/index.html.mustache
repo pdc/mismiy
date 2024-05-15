@@ -6,25 +6,24 @@
         <style>
             {{> inline.css }}
 
-            body h1 {
+            h1 {
                     margin: 0;
                     font-size: 1em;
                     font-weight: 500;
             }
-            body menu {
+            ul.main {
                 margin: 0;
                 padding: 0;
             }
-
 
             @media (min-width: 36em) {
                 p.text {
                     grid-column: 2 / span 2;
                 }
-                body h1 {
+                h1 {
                     grid-column: 2;
                 }
-                body menu {
+                ul.main {
                     grid-column: 3;
 
                     & li {
@@ -48,13 +47,14 @@
             Mismiy is yet another static site generator.
         </p>
         <h1>Blog index</h1>
-        <menu>
+        <ul class="main">
             {{# reverse_chronological }}
             <li>
                 <a href="{{ href }}">{{ title }}</a>
             </li>
             {{/ reverse_chronological }}
-        </menu>
+        </ul>
+        <link rel=stylesheet href="{{ dotdotslash }}style.css">
     </body>
 </html>
     
