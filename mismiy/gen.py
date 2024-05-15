@@ -50,6 +50,7 @@ class Gen:
                 "reverse_chronological": [
                     post.context() for post in reversed(loader.posts())
                 ],
+                "is_index": True,
             },
         )
 
