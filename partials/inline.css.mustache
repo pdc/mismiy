@@ -8,6 +8,7 @@ body {
     color: CanvasText;
     background-color: Canvas;
 }
+
 body > header {
     border-bottom: 1px dotted CanvasText;
     padding-top: 1rem;
@@ -31,8 +32,15 @@ body > header {
             }
         }
     }
-
 }
+
+@media (max-width: 36em) {
+    pre  {
+        width: 100%;
+        overflow: auto;
+    }
+}
+
 @media (min-width: 36em) {
     body {
         display: grid;
@@ -45,6 +53,42 @@ body > header {
         align-items: baseline;
     }
 }
+
 .text {
     font-family: "Palatino Linotype", "Palatino", "Palladio", "URW Palladio L", "Book Antiqua", serif;
+    line-height: 1.5;
+
+    & p, & pre {
+        margin-top: 1.5em;
+        margin-bottom: 1.5em;
+    }
+
+    & pre {
+        margin-left: 2em;
+        line-height: 1.25;
+
+        & > code {
+            display: block;
+        }
+    }
+
+    & blockquote {
+        margin-left: 2em;
+        line-height: 1.25;
+    }
+
+    & h2, & h3 {
+        font-family: "Helvetica Neue", "Arial", "Helvetica", sans-serif;
+    }
+
+    & h2 {
+        font-size: 1.25em;
+        font-weight: 600;
+        margin: 2em 0 1em;
+    }
+ }
+
+ code {
+    font-family:  "Verdana", "DejaVu Sans", "Vera Sans", sans-serif;
+    font-size-adjust: 0.469;  /* x height of Palatino. */
  }

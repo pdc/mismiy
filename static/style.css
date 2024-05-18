@@ -1,39 +1,38 @@
 @media (prefers-color-scheme: light) {
     :root {
-        --paper: #FFF;
-        --ink: rgb(0 0 0 / 0.8);
         --link: #39F;
-        --visted: #639;
+        --visited: #639;
     }
 }
 @media (prefers-color-scheme: dark) {
     :root {
-        --paper: #110;
-        --ink: rgb(255 255 255 / 0.9);
         --link: #C60;
-        --visted: #9C6;
+        --visited: #9C6;
     }
 }
 
-body {
-    color: var(--ink);
-    background-color: var(--paper);
+body > header {
+    & a:link, & a:visited {
+        color: inherit;
+        text-decoration: inherit;
+    }
+    & a:hover, & a:active {
+        color: var(--link);
+        text-decoration: underline;
+    }
 }
 
-.text a:link, .text a:hover, .text a:active {
-    color: var(--link);
-}
-.text a:visited {
-    color: var(--visted);
-}
+.text, .main {
 
-
-menu a:link, menu a:visited {
-    color: inherit;
-    text-decoration: inherit;
-}
-menu a:hover, menu a:active {
-    color: var(--link);
-    text-decoration: underline;
+    & a:link {
+        color: var(--link);
+    }
+    & a:visited {
+        color: var(--visited);
+    }
+    & a:hover,
+    & a:active {
+        color: var(--link);
+    }
 }
 

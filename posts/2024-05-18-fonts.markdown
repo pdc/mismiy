@@ -1,0 +1,67 @@
+title: Fonts with less CSS
+
+For Mismiy’s sample blog I wanted to create just enough of stylesheet to 
+be readable without going overboard with fancy font stuff.
+
+I don’t want to include font files in the repo, and I don’t want to use fonts
+hosted elsewhere, such as Google fonts, since that probably involves imposing 
+tracking cookies on my readers, so instead we can use old-timey [font stacks][1]
+using fonts that should already installed on the reader’s computer.
+
+## Fonts for text
+
+For text
+I use one of my favourites from the days when the PostScript 35 were all
+the fonts we had access to: [Palatino][] (Hermann Zapf, 1949).
+
+    font-family: "Palatino Linotype", "Palatino", "Palladio", "URW Palladio L", "Book Antiqua", serif;
+
+Palatino is a classic old-style, caligraphically inspired text face.
+It is legible (originally designed for fairly challenging printing conditions),
+and prettier than Times New Roman and Century Schoolbook.
+Palladio is URW’s clone; Book Antiqua is Monotype’s unlicensed clone, popularized
+by Microsoft’s bundling it with Windows.
+
+Headings are in contrast the obvious Helvetica-style font stach:
+
+    font-family: "Helvetica Neue", "Arial", "Helvetica", sans-serif;
+
+## Fonts for code
+
+These blog posts often deal with compiter code so we need a distinctly different
+face for that. It does not have to be monospace: If you aren’t writing Fortran,
+you don’t need to line text up in columns, so if your editor supports variable-width
+fonts, why not take advantage of them? Variable-width fonts for code were
+a feature of SmallTalk systems 45 years ago, so this is not a new idea.
+
+After a bit of experimentation with the fonts ubiquitous at least on commerical
+operating systems, I find myself using Verdana (designed by Matthew Carter for Microsoft).
+This is a bit surprising given I have always found Verdana kind of clunky and
+oversized, but it has
+features that make it better for code than Helvetica or Arial, such
+as more open counters on letters like `c`, and serifs on `I` and `1`.
+
+On the other hand, the enormous _x_-height makes it look swollen
+next to Palatino. So I have used `font-size-adjust` to scale it down:
+
+    code {
+      font-family: "Verdana", "DejaVu Sans", "Vera Sans", sans-serif;
+      font-size-adjust: 0.469;  /* x-height of Palatino. */
+    }
+
+For the sake of including Gnu/Linux systems I need to add alternatives like DejaVu
+and Vera (Jim Lyles et al.). They aren’t clones but they have the same design
+brief as Verdana.
+
+> Some text that mentions the nonexistent command `mismiy --publish`. Perhaps `StreamWriterFactoryBuilder` is
+> the name of a class. Or we might care about `:=` expressions where `left_hand_side`
+> is one of the variables.
+
+I originally tried Tahoma and preferred its slightly more condendsed glyphs,
+bit it requires a bit of letter spacing that would have looked wrong on the
+DejaVu or Vera fallbacks.
+
+
+
+[1]: https://www.smashingmagazine.com/2009/09/complete-guide-to-css-font-stacks/
+[Palatino]: https://en.wikipedia.org/wiki/Palatino#Book_Antiqua
