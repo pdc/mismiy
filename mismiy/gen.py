@@ -23,7 +23,7 @@ class Gen:
 
     def flush_tpls(self):
         """Discard cached templates and reload."""
-        self.partials = {
+        self.templates = {
             self.fname(file): file.read_text()
             for file in self.tpl_dir.glob("**/*.mustache")
         }
@@ -63,7 +63,7 @@ class Gen:
     ):
         out_file = public_path / name
         html = render(
-            self.partials[tpl_name or name], context, partials_dict=self.partials
+            self.templates[tpl_name or name], context, partials_dict=self.templates
         )
         out_file.write_text(html, encoding="UTF-8")
 

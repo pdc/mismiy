@@ -1,6 +1,5 @@
-
 body {
-    font-family: "Helvetica Neue", "Arial", "Helvetica", sans-serif;
+    font-family: "Helvetica Neue", "Arial Nova", sans-serif;
     font-size: 16px;
     line-height: 1.25;
 
@@ -14,7 +13,7 @@ body > header {
     padding-top: 1rem;
     padding-bottom: 0.5rem;
 
-    .logo {
+    & .logo {
         font-size: 2em;
         font-weight: 200;
     }
@@ -44,7 +43,7 @@ body > header {
 @media (min-width: 36em) {
     body {
         display: grid;
-        grid-template-columns: minmax(1rem, 1fr) 12em minmax(24em, 36em) minmax(1rem, 1fr);
+        grid-template-columns: minmax(max-content, 1fr) 12em minmax(24em, 36em) minmax(1rem, 1fr);
     }
     body > header {
         grid-column: 1 / span 4;

@@ -91,25 +91,25 @@ class CopyingEventHandler(FileSystemEventHandler):
 def main():
     arg_parser = ArgumentParser(description="Generate HTML from posts.")
     arg_parser.add_argument(
-        "--partials-dir",
+        "--templates-dir",
         "-p",
         metavar="PATH",
-        default="partials",
-        help="Root of mustache templates. Default is partials.",
+        default="templates",
+        help="Directory containing mustache templates. Default is `templates`.",
     )
     arg_parser.add_argument(
         "--static-dir",
         "-s",
         metavar="PATH",
         default="static",
-        help="Root of static files. Default is static.",
+        help="Root of static files. Default is `static`.",
     )
     arg_parser.add_argument(
         "--out-dir",
         "-o",
         metavar="PATH",
         default="pub",
-        help="Root of generated HTML tree. Default is pub.",
+        help="Root of generated HTML tree. Default is `pub`.",
     )
     arg_parser.add_argument(
         "--watch",
@@ -127,7 +127,7 @@ def main():
     args = arg_parser.parse_args()
 
     loader = Loader(Path(args.posts_dir))
-    gen = Gen(Path(args.partials_dir))
+    gen = Gen(Path(args.templates_dir))
     gen.render_posts(loader, Path(args.out_dir))
 
     if args.watch:
@@ -136,7 +136,7 @@ def main():
         posts_handler = GeneratingEventHandler(gen, loader, Path(args.out_dir))
         observer.schedule(posts_handler, args.posts_dir, recursive=True)
         tpl_handler = TemplateFlushingEventHandler(gen, loader, Path(args.out_dir))
-        observer.schedule(tpl_handler, args.partials_dir, recursive=True)
+        observer.schedule(tpl_handler, args.templates_dir, recursive=True)
         if args.static_dir:
             static_handler = CopyingEventHandler(
                 Path(args.static_dir), Path(args.out_dir)
