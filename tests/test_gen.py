@@ -1,3 +1,4 @@
+from datetime import datetime
 import unittest
 
 from mismiy.posts import Loader
@@ -80,6 +81,40 @@ class TestGen(TempDirMixin, unittest.TestCase):
 
         self.assertEqual(
             (self.pub_dir / "man.css").read_text(), "body { font-family: Helvetica; }"
+        )
+
+    def test_skips_unpublished_posts(self):
+        self.add_post("2024-05-19-drafty", "title: Drafty\n\nHello, world!")
+        self.loader = Loader(
+            self.posts_dir, include_drafts=False, now=datetime(2024, 5, 18, 22, 18)
+        )
+
+        # When the site is generated before the publication date …
+        gen = Gen(self.tpl_dir)
+        gen.render_posts(self.loader, self.pub_dir)
+
+        # Then the draft post is omitted.
+        self.assertFalse((self.pub_dir / "2024-05-19-drafty.html").exists())
+        # And there is no link from the index.
+        self.assertNotRegex(
+            (self.pub_dir / "index.html").read_text(), "2024-05-19-drafty.html"
+        )
+
+    def includes_unpublished_posts_if_drafts_mode(self):
+        self.add_post("2024-05-19-drafty", "title: Drafty\n\nHello, world!")
+        self.loader = Loader(
+            self.posts_dir, include_drafts=True, now=datetime(2024, 5, 18, 22, 18)
+        )
+
+        # When the site is generated before the publication date with include_drafts true …
+        gen = Gen(self.tpl_dir)
+        gen.render_posts(self.loader, self.pub_dir)
+
+        # Then the draft post is included.
+        self.assertTrue((self.pub_dir / "2024-05-19-drafty.html").exists())
+        # And there is a link from the index.
+        self.assertRegex(
+            (self.pub_dir / "index.html").read_text(), "2024-05-19-drafty.html"
         )
 
     def add_post(self, name: str, text: str):

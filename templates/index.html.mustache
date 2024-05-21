@@ -22,15 +22,25 @@
                     grid-column: 2 / span 2;
                 }
                 h1 {
-                    grid-column: 2;
+                    grid-column: 2 / span 2;
                 }
                 ul.main {
-                    grid-column: 3;
+                    grid-column: 2 / span 2;
+                    display: grid;
+                    grid-template-columns: subgrid;
 
                     & li {
-                        display: block;
-                        margin: 0 0 0.625em;
+                        grid-column: 1 / span 2;
+                        margin-top: 0.75em;
 
+                        display: grid;
+                        grid-template-columns: subgrid;
+                        align-items: baseline;
+
+                        & time {
+                            font-family: var(--swiss);
+                            font-size: 13px;
+                        }
                         & a {
                             display: block;
                         }
@@ -48,6 +58,9 @@
         <ul class="main">
             {{# reverse_chronological }}
             <li>
+                {{# published }}
+                <time datetime="{{iso_date}}">{{day}} {{month_name}} {{year}}</time>
+                {{/ published }}
                 <a href="{{ href }}">{{ title }}</a>
             </li>
             {{/ reverse_chronological }}

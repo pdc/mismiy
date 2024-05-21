@@ -1,4 +1,6 @@
 from argparse import ArgumentParser
+from datetime import datetime
+import locale
 from pathlib import Path
 import shutil
 import sys
@@ -88,11 +90,11 @@ class CopyingEventHandler(FileSystemEventHandler):
         self.again(event.src_path)
 
 
-def main():
+def main(argv: list[str] = None):
     arg_parser = ArgumentParser(description="Generate HTML from posts.")
     arg_parser.add_argument(
         "--templates-dir",
-        "-p",
+        "-t",
         metavar="PATH",
         default="templates",
         help="Directory containing mustache templates. Default is `templates`.",
@@ -118,16 +120,41 @@ def main():
         help="Watch files & rerun when they change.",
     )
     arg_parser.add_argument(
+        "--drafts",
+        "-d",
+        action="store_true",
+        default=None,
+        help="Include unpublished articles.",
+    )
+    arg_parser.add_argument(
+        "--as-of",
+        type=datetime.fromisoformat,
+        default=None,
+        help="Change the cut-off date for unpublished articles.",
+    )
+    arg_parser.add_argument(
+        "--locale",
+        metavar="LOCALE",
+        default="",
+        help="Override the default locale. "
+        "Must be a locale specifier like `en_GB.UTF-8`.",
+    )
+    arg_parser.add_argument(
         "posts_dir",
         metavar="PATH",
         nargs="?",
         default="posts",
         help="Directory with posts. Default is posts.",
     )
-    args = arg_parser.parse_args()
+    args = arg_parser.parse_args(argv)
 
-    loader = Loader(Path(args.posts_dir))
-    gen = Gen(Path(args.templates_dir))
+    locale.setlocale(locale.LC_ALL, args.locale or "")
+
+    now = args.as_of or datetime.now()
+    include_drafts = args.drafts if args.drafts is not None else bool(args.watch)
+    loader = Loader(Path(args.posts_dir), include_drafts=include_drafts, now=now)
+
+    gen = Gen(Path(args.templates_dir), Path(args.static_dir))
     gen.render_posts(loader, Path(args.out_dir))
 
     if args.watch:
@@ -137,11 +164,8 @@ def main():
         observer.schedule(posts_handler, args.posts_dir, recursive=True)
         tpl_handler = TemplateFlushingEventHandler(gen, loader, Path(args.out_dir))
         observer.schedule(tpl_handler, args.templates_dir, recursive=True)
-        if args.static_dir:
-            static_handler = CopyingEventHandler(
-                Path(args.static_dir), Path(args.out_dir)
-            )
-            observer.schedule(static_handler, args.static_dir, recursive=True)
+        static_handler = CopyingEventHandler(Path(args.static_dir), Path(args.out_dir))
+        observer.schedule(static_handler, args.static_dir, recursive=True)
 
         observer.start()
         try:

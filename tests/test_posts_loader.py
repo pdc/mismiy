@@ -1,9 +1,10 @@
+from datetime import datetime
 import unittest
 from tempfile import mkdtemp
 from shutil import rmtree
 from pathlib import Path
 
-from mismiy.posts import Loader, Post
+from mismiy.posts import Loader
 
 
 class TempDirMixin:
@@ -42,36 +43,47 @@ class TestLoader(TempDirMixin, unittest.TestCase):
         self.assertEqual(result[0].body, "Hello, vote.")
         self.assertEqual(result[0].name, "2024-05-02-vote")
 
+    def test_posts_have_optional_published_datetime(self):
+        (self.dir_path / "2024-05-18-quince.markdown").write_text(
+            "title: Greeting\npublished: 2024-05-19\n\nHello, world."
+        )
+        (self.dir_path / "2024-05-19-spum.markdown").write_text(
+            "title: Greeting\n\nHello, world."
+        )
+        (self.dir_path / "undated.markdown").write_text(
+            "title: Greeting\n\nHello, world."
+        )
+        loader = Loader(self.dir_path, include_drafts=True)
 
-class TestPost(unittest.TestCase):
-    def test_renders_markdown(self):
-        post = Post("2024-05-05--hello", {"title": "Hello"}, "Hello, *world*!")
+        result = loader.posts()
 
-        result = post.context()
-
-        self.assertEqual(result["body"], "<p>Hello, <em>world</em>!</p>\n")
-
-    def test_includes_meta_in_context(self):
-        post = Post("2024-05-05--hello", {"title": "Hello"}, "Hello, *world*!")
-
-        result = post.context()
-
-        # Then the context includes at least the following items:
         self.assertEqual(
-            result,
-            result
-            | {
-                "name": "2024-05-05--hello",
-                "href": "2024-05-05--hello.html",
-                "dotdotslash": "",
-                "title": "Hello",
-            },
+            [post.meta.get("published") for post in result],
+            [datetime(2024, 5, 19), datetime(2024, 5, 19), None],
         )
 
-    def test_dotdotslash_if_slahes_in_namet(self):
-        post = Post("2024/05/05/hello", {"title": "Hello"}, "Hello, *world*!")
+    def test_excludes_posts_published_in_future(self):
+        # Given a post for a particular date …
+        (self.dir_path / "2024-05-21-future.markdown").write_text(
+            "title: Greeting\npublished: 2024-05-21\n\nHello, world."
+        )
 
-        result = post.context()
+        # When we load posts before the post is published …
+        loader = Loader(self.dir_path, now=datetime(2024, 5, 20))
+        result = loader.posts()
 
-        # Then the dotdotslash item is the path back to the root of the posts.
-        self.assertEqual(result["dotdotslash"], "../../../")
+        # Then we get an empty list because unpublished post omitted.
+        self.assertFalse(result)
+
+    def test_includes_posts_if_include_drafts(self):
+        # Given a post for a particular date …
+        (self.dir_path / "2024-05-21-future.markdown").write_text(
+            "title: Greeting\npublished: 2024-05-21\n\nHello, world."
+        )
+
+        # When we load posts before the post is published …
+        loader = Loader(self.dir_path, now=datetime(2024, 5, 20), include_drafts=True)
+        result = loader.posts()
+
+        # Then we get an empty list because unpublished post omitted.
+        self.assertTrue(result[0].meta.get("is_draft"))

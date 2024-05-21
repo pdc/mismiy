@@ -8,7 +8,7 @@
             {{> inline.css }}
 
             article h1 {
-                margin: 1.25em 0 0.5em;
+                margin: 3rem 0 1.5rem;
                 font-size: 1.5em;
                 font-weight: 500;
             }
@@ -39,6 +39,12 @@
         {{> header.html }}
         <article>
             <header><h1>{{ title }}</h1></header>
+            <div class="meta">
+                {{# published }}
+                <time datetime="{{iso_date}}">{{day}} {{month_name}} {{year}}</time>
+                {{/ published }}
+                {{# is_draft }}<b class="draft">[DRAFT]</b>{{/ is_draft }}
+            </div>
             <div class="text">
             {{{ body }}}
             </div>

@@ -1,0 +1,79 @@
+title: Date formatting and locale
+
+I wanted to add publication date to posts’ metadata, and render it in the page. 
+
+The _published_ property of a post has two main functions. First, it is shown
+on the page. This requires locale-specific formatting. Second, by setting it
+to a future date it indicates that an article is not yet unpublished, so
+should be skipped when generating the site.
+
+
+## Date metadata
+
+The post loader gets the _published_ property from one of two places. It can be
+defined in the metadata at the top of the post:
+
+    title: Some post title
+    published: 2024-05-19
+
+    Body text starts here
+
+The first exploits uses the schema feature of [StrictYAML] to tell it to interpret
+the `published` property as a datetime.
+
+If the property is not specified, and the file name starts with a date (like
+`2024-05-19-date.markdown`), then that date is used.
+
+In both cases the date is expressed in the _yyyy-mm-dd_ format described
+in [RFC 3339].
+
+
+## Date formatting
+
+[Mustache] does not directly support formatting dates, so I have come up
+with a bit of a kludge that should be OK until we get serious about internationalization
+one day.
+
+When creating the context dictionary for generating the post, datetime values
+are represented by a dictionary with the following keys:
+
+```python
+{
+    "year": "2024",
+    "month": "5",
+    "day": "19",
+    "month_2digits": "05",
+    "day_2digits": "19",
+    "month_name": "May",
+    "iso_date": "2024-05-19"
+}
+```
+
+
+The template uses this by treating the `published` property as an object:
+
+    {{# published }}
+    <time datetime="{{iso_date}}">{{day}} {{month_name}} {{year}}</time>
+    {{/ published }}
+
+The month name comes from the [locale] database.
+
+
+## Hiding unpublished posts
+
+While working on a new post the `mismiy` command will be running in watch
+mode so the drafts can be previewed in a browser. When generating a ‘production’
+build for copying to the real server, the draft posts and all links to them
+shouold be omitted. The `--drafts` flag on the `mismiy` command makes it include
+unpublished posts. The `--watch` flag implies `--drafts`.
+
+Generally publication dates are given without a time of day. We will assume that
+the time of day us 0:00 in this case.
+
+
+
+
+[locale]: https://docs.python.org/3/library/locale.html
+[Mustache]: http://mustache.github.io
+[StrictYAML]: https://hitchdev.com/strictyaml/
+[RFC 3339]: https://datatracker.ietf.org/doc/html/rfc3339
