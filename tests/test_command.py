@@ -1,6 +1,6 @@
+import unittest
 from datetime import datetime
 from pathlib import Path
-import unittest
 from unittest.mock import patch
 
 from mismiy import command

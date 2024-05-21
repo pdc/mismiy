@@ -1,8 +1,8 @@
-from datetime import datetime
 import unittest
-from tempfile import mkdtemp
-from shutil import rmtree
+from datetime import datetime
 from pathlib import Path
+from shutil import rmtree
+from tempfile import mkdtemp
 
 from mismiy.posts import Loader
 

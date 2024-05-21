@@ -1,13 +1,14 @@
-from dataclasses import dataclass
-from datetime import datetime, date
-from collections.abc import Mapping
 import locale
-from typing import Any
-from pathlib import Path
 import re
-from strictyaml import load as yaml_load, Map, Str, Datetime, Optional
-import mistletoe
+from collections.abc import Mapping
+from dataclasses import dataclass
+from datetime import date, datetime
+from pathlib import Path
+from typing import Any
 
+import mistletoe
+from strictyaml import Datetime, Map, Optional, Str
+from strictyaml import load as yaml_load
 
 blank_line = re.compile(r"\s*\n\s*\n")
 date_re = re.compile(r"^(20\d{2})-(\d{2})-(\d{2})")

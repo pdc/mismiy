@@ -1,16 +1,16 @@
-from argparse import ArgumentParser
-from datetime import datetime
 import locale
-from pathlib import Path
 import shutil
 import sys
 import time
+from argparse import ArgumentParser
+from datetime import datetime
+from pathlib import Path
 
-from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
-from mismiy.posts import Loader
 from mismiy.gen import Gen
+from mismiy.posts import Loader
 
 
 class GeneratingEventHandler(FileSystemEventHandler):

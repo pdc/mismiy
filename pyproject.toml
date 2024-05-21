@@ -16,6 +16,7 @@ watchdog = "^4.0.0"
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
 flake8 = "^7.0.0"
+isort = "^5.13.2"
 
 [tool.poetry.scripts]
 mismiy = 'mismiy.command:main'
@@ -23,3 +24,6 @@ mismiy = 'mismiy.command:main'
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"

@@ -1,8 +1,8 @@
-from datetime import datetime
 import unittest
+from datetime import datetime
 
-from mismiy.posts import Loader
 from mismiy.gen import Gen
+from mismiy.posts import Loader
 
 from .test_posts_loader import TempDirMixin
 

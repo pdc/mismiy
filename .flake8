@@ -1,0 +1,3 @@
+[flake8] 
+; Let Black determine line lengths.
+extend-ignore: E501
