@@ -1,4 +1,5 @@
 title: Test post for Mismiy
+author: Damian Cugley
 
 This is the first post for Mismiy, yet another static blog generator.
 

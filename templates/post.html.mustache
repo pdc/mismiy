@@ -40,6 +40,10 @@
         <article>
             <header><h1>{{ title }}</h1></header>
             <div class="meta">
+                {{#author}}
+                {{^uri}}<span class="h-card">{{name}}</span>{{/uri}}
+                {{#uri}}<a href="{{uri}}">{{name}}</a>{{/uri}}
+                {{/author}}
                 {{# published }}
                 <time datetime="{{iso_date}}">{{day}} {{month_name}} {{year}}</time>
                 {{/ published }}

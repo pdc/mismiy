@@ -1,4 +1,5 @@
 title: Fonts with less CSS
+author: Damian Cugley
 
 For Mismiy’s sample blog I wanted to create just enough of stylesheet to 
 be readable without going overboard with fancy font stuff.

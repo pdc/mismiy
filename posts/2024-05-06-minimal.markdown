@@ -1,5 +1,6 @@
 title: Minimal blog
 published: 2024-05-06
+author: Damian Cugley
 
 The least possible blog is a page per post with title and body text, and 
 an index page that has a reverse-chronological list of links to posts. Without

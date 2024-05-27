@@ -1,4 +1,5 @@
 title: Watch mode for mismiy
+author: Damian Cugley
 
 The `mismiy` command now has a `--watch` option that causes it to monitor
 the posts and partials directories for changes, and re-renders the site

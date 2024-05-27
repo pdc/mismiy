@@ -1,0 +1,113 @@
+title: Atom feed
+author: Damian Cugley
+
+Let’s add an [Atom] resource to allow feed readers to read a feed of blog posts.
+
+## A what
+
+Feed readers (also called RSS readers) like [NetNewsWire] are apps for keeping up with blogs
+by listing new posts on all your subscribed blogs. To make this work the
+blog website publishes a file
+in a format like RSS, [Atom], or [JSON Feed]. When you subscribe to a blog,
+your reader app reads this periodically to see if new posts have been added.
+
+The _feed_ document corresponds to the blog index page, and it has _entries_
+corresponding to blog posts.
+
+## Mismiy version
+
+An [Atom] feed is an XML document. Rather than generate my XML with Mustache,
+we added a simple XML writer that generates tidy XML code. This slightly contradicts
+our aim of writing the minimum code, but using an XML writer avoids wasting
+time working out why a mustache template is not generating valid XML.
+
+On top of the metadata we already have,
+Atom entries for posts need authors, unique identifiers, and updated datetimes.
+Feeds need unique identifiers, and a link to their own URL.
+
+_Author_ objects can be added to the schema for post metadata. Mismiy supports
+two formats: the first is just a string, the name of the writer:
+
+```yaml
+title: Some blog entry
+author: Alice de Winter
+```
+
+The other includes extra fields that Atom allows:
+
+```yaml
+title: Some blog entry
+author:
+    name: Alice de Winter
+    uri: https://dewinter.example/alice/
+    email: alice@dewinter.example
+```
+
+Another mandatory field is the `updated` timestamp of the entries. This can be
+optionally
+specified in the metadata at the top of a post. It is only needed when new
+information has been added to the post since it was published: Otherwise
+Mismiy can just use the published datetime.
+
+
+## Digression on identifiers
+
+Atom requires identifiers for entries and the feed as a whole. We want Mimsiy
+to be able to derive them from information authors already supply, such as the file
+names of the posts, so that authors are not
+_required_ to do extra work to satisfy Atom’s requirement.
+
+The unique identifiers for entries are strings in the form of URIs.
+They have to be unique and durable. The three
+main types of URI that seem applicable are:
+
+- `https://dewinter.example/alice/2024-05-26-something`
+- `tag:dewinter.example,2024:alice:2024-05-26-something`
+- `urn:uuid:25082a25-c80c-520b-82dc-b36ed5123c3d`
+
+These are respectively
+- Normal HTTP URLs (which will not be dereferenced);
+- Explicitly non-dereferencable URIs, using the [Tag URI scheme]; and
+- The [UUID URN namespace].
+
+How do we determine the ID for a given post?
+- If the feed identifier is one of the first two listed above we concatenate
+  the file name of the post to the feed identifier
+  (since that is unique in the scope of the feed);
+- If the feed identifier is a UUID, we can generate the post’s UUID using
+  the [UUID Version 5] conventions; and
+- We can add `id` to the schema for post metadata, for those cases when the
+  author wants a particular value.
+
+How do we determine the ID for a given feed?
+- The blog author supplies it in a configuration file or command-line argument; or
+- It is a UUIDv5 generated from the directory path the posts come from (assumes
+  the blog editor never changes it).
+
+The second option means the template for creating a blog need not include
+an identifier, reducing the risk that people will accidentally create clashing feeds.
+
+## Other feed formats are available
+
+Existing RSS readers must support Atom, so it follows there is no added
+value in supporting other formats. The reason for choosing Atom is that it
+is the one with the most thoroughly worked out and clearest specification.
+
+Disappointingly the [Feed Validation Service] still warns
+against using an namespace prefix in the XML document, linking to a survey
+from 2007 showing many feed readers fail to read XML with namespaces properly.
+We are going to ignore that and assume that anyone maintaining a feed reader
+in the last decade will have made use of an adequate XML parser.
+
+On Linux and macOS we can check the feed file is valid [using a RelaxNG schema][1]
+and the `xmllint` command or the Python package `lxml`.
+
+
+[Atom]: https://datatracker.ietf.org/doc/html/rfc4287
+[JSON Feed]: https://www.jsonfeed.org
+[NetNewsWire]: https://netnewswire.com
+[Tag URI scheme]: https://datatracker.ietf.org/doc/html/rfc4151
+[UUID URN Namespace]: https://datatracker.ietf.org/doc/html/rfc9562
+[UUID Version 5]: https://datatracker.ietf.org/doc/html/rfc9562#name-uuid-version-5
+[Feed Validation Service]: https://validator.w3.org/feed/
+[1]: https://cweiske.de/tagebuch/atom-validation.htm
