@@ -48,6 +48,9 @@
                 }
             }
         </style>
+        {{#links}}
+        <link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>
+        {{/links}}
     </head>
     <body>
         {{> header.html }}

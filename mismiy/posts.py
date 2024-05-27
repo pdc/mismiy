@@ -4,16 +4,67 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
+from uuid import UUID, uuid5
 
 import mistletoe
-from strictyaml import Datetime, Map, Optional, Str
+from strictyaml import Datetime, Email, Map, Optional, Str, Url
 from strictyaml import load as yaml_load
+
+from .xml import Elt
+
+NAMESPACE_BLOG = UUID("30c72114-7908-4a69-84ff-7ed69090220d")
 
 blank_line = re.compile(r"\s*\n\s*\n")
 date_re = re.compile(r"^(20\d{2})-(\d{2})-(\d{2})")
 
-schema = Map({"title": Str(), Optional("published"): Datetime()})
+person_schema = Str() | Map(
+    {
+        "name": Str(),
+        Optional("uri"): Url(),
+        Optional("email"): Email(),
+    }
+)
+post_schema = Map(
+    {
+        "title": Str(),
+        Optional("author"): person_schema,
+        Optional("id"): Str(),
+        Optional("published"): Datetime(),
+        Optional("updated"): Datetime(),
+    }
+)
+meta_schema = Map(
+    {
+        Optional("title"): Str(),
+        Optional("id"): Str(),
+        Optional("url"): Url(),
+    }
+)
+# In the above, the `id` fields are `Str` rather than `Url` because
+# the URL validator does not like URLs that start with `tag:` and `urn:`.
+
+
+@dataclass
+class Person:
+    name: str
+    uri: str | None = None
+    email: str | None = None
+
+    def atom_person(self, etype: str = "atom:author") -> Elt:
+        result = Elt(etype)
+        result.element("atom:name", self.name)
+        if self.uri:
+            result.element("atom:uri", self.uri)
+        if self.email:
+            result.element("atom:email", self.email)
+        return result
+
+    @classmethod
+    def new(cls, obj: str | Mapping[str, str]) -> Self:
+        if isinstance(obj, str):
+            return cls(obj)
+        return cls(**obj)
 
 
 @dataclass
@@ -40,19 +91,39 @@ class Post:
                 "name": self.name,
                 "href": self.href,
                 "dotdotslash": self.dotdotslash,
-                "body": mistletoe.markdown(self.body),
+                "body": self.body_html(),
             }
         )
         return result
+
+    def body_html(self):
+        """The body of the entry, formatted as HTML fragment."""
+        return mistletoe.markdown(self.body)
+
+    def make_id(self, feed_id: str):
+        """Given id of feed, create a unique id for this post."""
+        if result := self.meta.get("id"):
+            return result
+        if feed_id.startswith("tag:") and "/" not in feed_id:
+            colon = "" if feed_id.endswith(":") else ":"
+            return f"{feed_id}{colon}{self.name}"
+        if feed_id.startswith("urn:uuid"):
+            namespace_uuid = feed_id.removeprefix("urn:uuid:")
+            uuid = uuid5(UUID(namespace_uuid), self.name)
+            return f"urn:uuid:{uuid}"
+        slash = "" if feed_id.endswith("/") else "/"
+        return f"{feed_id}{slash}{self.name}"
 
     @classmethod
     def from_text(cls, name: str, text: str) -> "Post":
         parts = blank_line.split(text, 1)
         if len(parts) != 2:
             raise ValueError("Expected meta and body separated by blank line.")
-        meta = yaml_load(parts[0], schema).data
+        meta = yaml_load(parts[0], post_schema).data
         if not meta.get("published") and (m := date_re.search(name)):
             meta["published"] = datetime(int(m[1]), int(m[2]), int(m[3]))
+        if obj := meta.get("author"):
+            meta["author"] = Person.new(obj)
         return cls(name, meta, parts[1])
 
     @classmethod
@@ -76,26 +147,58 @@ def expand_date(d: datetime | date) -> Mapping[str, str]:
 class Loader:
     """Loads posts from a directory full of Markdown files."""
 
+    meta_file_name = "META.yaml"
+
     def __init__(
-        self,
-        post_dir: Path | str,
-        include_drafts=False,
-        now: datetime | None = None,
+        self, posts_dir: Path | str, include_drafts=False, now: datetime | None = None
     ):
-        self.post_dir = Path(post_dir)
+        self.posts_dir = Path(posts_dir)
         self._posts = None
         self.include_drafts = include_drafts
         self.now = now or datetime.now()
+        self._meta = None
+
+    @property
+    def id(self):
+        return self.meta["id"]
+
+    @property
+    def title(self):
+        return self.meta["title"]
+
+    @property
+    def meta(self):
+        """Metadata about the blog as a whole."""
+        if self._meta is None:
+            meta_file = self.posts_dir / self.meta_file_name
+            if meta_file.exists():
+                self._meta = yaml_load(meta_file.read_text(), meta_schema).data
+                print("Loaded metadata from", meta_file)
+            else:
+                self._meta = {}
+            # Ensure we have the minimum metadata.
+            if not self._meta.get("id"):
+                uuid = uuid5(NAMESPACE_BLOG, str(self.posts_dir.absolute()))
+                self._meta["id"] = f"urn:uuid:{uuid}"
+            if not self.meta.get("title"):
+                p = self.posts_dir.absolute()
+                while p.name == "posts":
+                    p = p.parent
+                self._meta["title"] = p.name
+        return self._meta
 
     def flush(self):
+        """Discard any cached posts, so next call to posts() loads them afresh."""
         self._posts = None
 
     def posts(self):
         if self._posts is None:
             self._posts = []
-            for post_path in sorted(self.post_dir.glob("**/*.markdown")):
+            for post_path in sorted(self.posts_dir.glob("**/*.markdown")):
                 post = Post.from_file(
-                    str(post_path.relative_to(self.post_dir)).removesuffix(".markdown"),
+                    str(post_path.relative_to(self.posts_dir)).removesuffix(
+                        ".markdown"
+                    ),
                     post_path,
                 )
 
@@ -111,4 +214,4 @@ class Loader:
 
     def load(self, post_name):
         """Load the named post."""
-        return Post.from_file(self.post_dir / (post_name + ".txt"))
+        return Post.from_file(self.posts_dir / (post_name + ".txt"))
