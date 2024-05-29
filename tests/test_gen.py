@@ -17,6 +17,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "id: tag:alleged.org.uk,2024:mismiy:test\n"
             "title: Test blog\n"
             "url: https://mismiy.example/test/\n"
+            "tz: Europe/London\n"
         )
 
         self.tpl_dir = self.dir_path / "tpl"

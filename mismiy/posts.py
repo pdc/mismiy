@@ -2,10 +2,11 @@ import locale
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timezone, tzinfo
 from pathlib import Path
 from typing import Any, Self
 from uuid import UUID, uuid5
+from zoneinfo import ZoneInfo
 
 import mistletoe
 from strictyaml import Datetime, Email, Map, Optional, Str, Url
@@ -39,6 +40,7 @@ meta_schema = Map(
         Optional("title"): Str(),
         Optional("id"): Str(),
         Optional("url"): Url(),
+        Optional("tz"): Str(),
     }
 )
 # In the above, the `id` fields are `Str` rather than `Url` because
@@ -115,20 +117,32 @@ class Post:
         return f"{feed_id}{slash}{self.name}"
 
     @classmethod
-    def from_text(cls, name: str, text: str) -> "Post":
+    def from_text(cls, name: str, text: str, tz: tzinfo) -> "Post":
+        """Create a post from this document.
+
+        Arguments:
+            name: names the post; usually filename without extension
+            text: content of the post, with metadata separated from
+                body by a bank line
+            tz: the tzinfo value to use for published dates lacking
+                a time zone
+        """
         parts = blank_line.split(text, 1)
         if len(parts) != 2:
             raise ValueError("Expected meta and body separated by blank line.")
         meta = yaml_load(parts[0], post_schema).data
         if not meta.get("published") and (m := date_re.search(name)):
             meta["published"] = datetime(int(m[1]), int(m[2]), int(m[3]))
+        for k, v in meta.items():
+            if isinstance(v, datetime) and datetime_naïve(v):
+                meta[k] = v.replace(tzinfo=tz)
         if obj := meta.get("author"):
             meta["author"] = Person.new(obj)
         return cls(name, meta, parts[1])
 
     @classmethod
-    def from_file(cls, name: str, file: Path) -> "Post":
-        return cls.from_text(name, file.read_text(encoding="UTF-8"))
+    def from_file(cls, name: str, file: Path, tz: tzinfo) -> "Post":
+        return cls.from_text(name, file.read_text(encoding="UTF-8"), tz)
 
 
 def expand_date(d: datetime | date) -> Mapping[str, str]:
@@ -141,6 +155,7 @@ def expand_date(d: datetime | date) -> Mapping[str, str]:
         "day": str(d.day),
         "day_2digits": "%02d" % d.day,
         "iso_date": d.date().isoformat(),
+        "iso_datetime": d.isoformat(),
     }
 
 
@@ -152,11 +167,11 @@ class Loader:
     def __init__(
         self, posts_dir: Path | str, include_drafts=False, now: datetime | None = None
     ):
-        self.posts_dir = Path(posts_dir)
-        self._posts = None
-        self.include_drafts = include_drafts
-        self.now = now or datetime.now()
         self._meta = None
+        self._posts = None
+        self.posts_dir = Path(posts_dir)
+        self.include_drafts = include_drafts
+        self.now = now.astimezone(self.tz) if now else datetime.now(self.tz)
 
     @property
     def id(self):
@@ -165,6 +180,10 @@ class Loader:
     @property
     def title(self):
         return self.meta["title"]
+
+    @property
+    def tz(self):
+        return self.meta["tz"]
 
     @property
     def meta(self):
@@ -185,6 +204,10 @@ class Loader:
                 while p.name == "posts":
                     p = p.parent
                 self._meta["title"] = p.name
+            if tz_name := self._meta.get("tz"):
+                self._meta["tz"] = ZoneInfo(tz_name)
+            else:
+                self._meta["tz"] = timezone.utc
         return self._meta
 
     def flush(self):
@@ -195,12 +218,10 @@ class Loader:
         if self._posts is None:
             self._posts = []
             for post_path in sorted(self.posts_dir.glob("**/*.markdown")):
-                post = Post.from_file(
-                    str(post_path.relative_to(self.posts_dir)).removesuffix(
-                        ".markdown"
-                    ),
-                    post_path,
+                name = str(post_path.relative_to(self.posts_dir)).removesuffix(
+                    ".markdown"
                 )
+                post = Post.from_file(name, post_path, tz=self.tz)
 
                 published = post.meta.get("published")
                 if published is None or published > self.now:
@@ -215,3 +236,7 @@ class Loader:
     def load(self, post_name):
         """Load the named post."""
         return Post.from_file(self.posts_dir / (post_name + ".txt"))
+
+
+def datetime_naïve(d: datetime) -> bool:
+    return d.tzinfo is None or d.tzinfo.utcoffset(d) is None

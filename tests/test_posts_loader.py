@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from shutil import rmtree
 from tempfile import mkdtemp
@@ -59,7 +59,11 @@ class TestLoader(TempDirMixin, unittest.TestCase):
 
         self.assertEqual(
             [post.meta.get("published") for post in result],
-            [datetime(2024, 5, 19), datetime(2024, 5, 19), None],
+            [
+                datetime(2024, 5, 19, tzinfo=timezone.utc),
+                datetime(2024, 5, 19, tzinfo=timezone.utc),
+                None,
+            ],
         )
 
     def test_excludes_posts_published_in_future(self):
@@ -69,7 +73,7 @@ class TestLoader(TempDirMixin, unittest.TestCase):
         )
 
         # When we load posts before the post is published …
-        loader = Loader(self.dir_path, now=datetime(2024, 5, 20))
+        loader = Loader(self.dir_path, now=datetime(2024, 5, 20, tzinfo=timezone.utc))
         result = loader.posts()
 
         # Then we get an empty list because unpublished post omitted.
@@ -82,7 +86,11 @@ class TestLoader(TempDirMixin, unittest.TestCase):
         )
 
         # When we load posts before the post is published …
-        loader = Loader(self.dir_path, now=datetime(2024, 5, 20), include_drafts=True)
+        loader = Loader(
+            self.dir_path,
+            now=datetime(2024, 5, 20, tzinfo=timezone.utc),
+            include_drafts=True,
+        )
         result = loader.posts()
 
         # Then we get an empty list because unpublished post omitted.
@@ -149,13 +157,31 @@ class TestLoader(TempDirMixin, unittest.TestCase):
         # Then it gets the title from the parent directory.
         self.assertTrue(loader.title)
 
+    def test_time_zone_defaults_to_utc(self):
+        loader = Loader(self.dir_path)
+
+        self.assertEqual(
+            loader.tz.tzname(datetime(2024, 5, 29, tzinfo=timezone.utc)), "UTC"
+        )
+        self.assertEqual(loader.now.tzname(), "UTC")
+
     def test_reads_meta_yaml(self):
         meta_file = self.dir_path / "META.yaml"
         meta_file.write_text(
-            "id: tag:dewinter.example,2024:alice\ntitle: Alice’s Awesome Blog\n"
+            "id: tag:dewinter.example,2024:alice\ntitle: Alice’s Awesome Blog\ntz: Australia/Brisbane\n"
         )
 
         loader = Loader(self.dir_path)
 
         self.assertEqual(loader.id, "tag:dewinter.example,2024:alice")
         self.assertEqual(loader.title, "Alice’s Awesome Blog")
+        self.assertEqual(loader.now.tzname(), "AEST")
+
+    def test_assumes_naïve_now_is_local(self):
+
+        loader = Loader(self.dir_path, now=datetime(2024, 5, 29, 22, 48))
+
+        self.assertEqual(
+            loader.now,
+            datetime(2024, 5, 29, 22, 48).astimezone(timezone.utc),
+        )
