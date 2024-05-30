@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 
 from chevron import render
 
-from .posts import Loader, Post
+from .posts import Loader, Post, datetime_naïve
 from .xml import Doc, Elt
 
 
@@ -172,5 +172,5 @@ class Gen:
 
 def atom_date(d: datetime) -> str:
     # Atom does not allow timestamps without time zones.
-    # Use `astimezone` to ensure it has local timezone.
-    return d.astimezone().isoformat().replace("+00:00", "Z")
+    assert not datetime_naïve(d)
+    return d.isoformat()
