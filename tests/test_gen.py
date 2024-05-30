@@ -137,7 +137,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "2024-05-25-atomic",
             {
                 "title": "Atomic title",
-                "published": datetime.fromisoformat("2024-05-25"),
+                "published": datetime.fromisoformat("2024-05-25T00:00+01:00"),
                 "author": Person("Alice de Winter", "https://dewinter.example/alice"),
             },
             "Atomic first paragraph.\n\nAtomic second paragraph.",
@@ -193,7 +193,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "2024-05-25-updated",
             {
                 "title": "2024-05-25-updated title",
-                "published": datetime.fromisoformat("2024-05-25"),
+                "published": datetime.fromisoformat("2024-05-25T00:00+01:00"),
                 "updated": datetime.fromisoformat("2024-05-26T17:48+01:00"),
                 "author": Person("Bob McRobertson"),
             },
