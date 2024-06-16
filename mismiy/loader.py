@@ -159,17 +159,17 @@ def expand_date(d: datetime | date) -> Mapping[str, str]:
     }
 
 
-class Loader:
+class Source:
     """Loads posts from a directory full of Markdown files."""
 
     meta_file_name = "META.yaml"
 
     def __init__(
-        self, posts_dir: Path | str, include_drafts=False, now: datetime | None = None
+        self, pages_dir: Path | str, include_drafts=False, now: datetime | None = None
     ):
         self._meta = None
-        self._posts = None
-        self.posts_dir = Path(posts_dir)
+        self._pages = None
+        self.pages_dir = Path(pages_dir)
         self.include_drafts = include_drafts
         self.now = now.astimezone(self.tz) if now else datetime.now(self.tz)
 
@@ -186,10 +186,14 @@ class Loader:
         return self.meta["tz"]
 
     @property
+    def url(self):
+        return self.meta["url"]
+
+    @property
     def meta(self):
         """Metadata about the blog as a whole."""
         if self._meta is None:
-            meta_file = self.posts_dir / self.meta_file_name
+            meta_file = self.pages_dir / self.meta_file_name
             if meta_file.exists():
                 self._meta = yaml_load(meta_file.read_text(), meta_schema).data
                 print("Loaded metadata from", meta_file)
@@ -197,10 +201,10 @@ class Loader:
                 self._meta = {}
             # Ensure we have the minimum metadata.
             if not self._meta.get("id"):
-                uuid = uuid5(NAMESPACE_BLOG, str(self.posts_dir.absolute()))
+                uuid = uuid5(NAMESPACE_BLOG, str(self.pages_dir.absolute()))
                 self._meta["id"] = f"urn:uuid:{uuid}"
             if not self.meta.get("title"):
-                p = self.posts_dir.absolute()
+                p = self.pages_dir.absolute()
                 while p.name == "posts":
                     p = p.parent
                 self._meta["title"] = p.name
@@ -211,31 +215,78 @@ class Loader:
         return self._meta
 
     def flush(self):
-        """Discard any cached posts, so next call to posts() loads them afresh."""
-        self._posts = None
+        """Discard any cached posts, so next call to pages() loads them afresh."""
+        self._pages = None
 
-    def posts(self):
-        if self._posts is None:
-            self._posts = []
-            for post_path in sorted(self.posts_dir.glob("**/*.markdown")):
-                name = str(post_path.relative_to(self.posts_dir)).removesuffix(
+    def pages(self):
+        if self._pages is None:
+            self._pages = []
+            for page_path in sorted(self.pages_dir.glob("**/*.markdown")):
+                name = str(page_path.relative_to(self.pages_dir)).removesuffix(
                     ".markdown"
                 )
-                post = Post.from_file(name, post_path, tz=self.tz)
+                page = Post.from_file(name, page_path, tz=self.tz)
 
-                published = post.meta.get("published")
+                published = page.meta.get("published")
                 if published is None or published > self.now:
                     if self.include_drafts:
-                        post.meta["is_draft"] = True
+                        page.meta["is_draft"] = True
                     else:
                         continue
-                self._posts.append(post)
+                self._pages.append(page)
+        return self._pages
 
-        return self._posts
 
-    def load(self, post_name):
-        """Load the named post."""
-        return Post.from_file(self.posts_dir / (post_name + ".txt"))
+class Loader:
+    def __init__(
+        self,
+        pages_dirs: list[Path | str],
+        include_drafts=False,
+        now: datetime | None = None,
+    ):
+        self.sources = [
+            Source(pages_dir, include_drafts, now) for pages_dir in pages_dirs
+        ]
+
+    @property
+    def id(self):
+        """Id for use in feed."""
+        for source in self.sources:
+            if result := source.id:
+                return result
+
+    @property
+    def title(self):
+        """Title for use in feed."""
+        for source in self.sources:
+            if result := source.title:
+                return result
+
+    @property
+    def tz(self):
+        """Time zone for use in feed."""
+        for source in self.sources:
+            if result := source.tz:
+                return result
+
+    @property
+    def url(self):
+        """URL that is the base of the blog, used to generate links to posts."""
+        for source in self.sources:
+            if result := source.url:
+                return result
+
+    def flush(self):
+        """Force all pages to be reloaded."""
+        for source in self.sources:
+            source.flush()
+
+    def pages(self):
+        return [p for source in self.sources for p in source.pages()]
+
+    def posts(self):
+        """Pages that have ‘post’ nature."""
+        return self.pages()
 
 
 def datetime_naïve(d: datetime) -> bool:

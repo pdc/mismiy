@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 
 from mismiy.gen import Gen
-from mismiy.posts import Loader, Person, Post
+from mismiy.loader import Loader, Person, Post
 
 from .test_posts_loader import TempDirMixin
 
@@ -26,9 +26,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.add_tpl("index.html", "Index template")
 
         self.pub_dir = self.dir_path / "pub"
-        self.loader = Loader(
-            self.posts_dir,
-        )
+        self.loader = Loader([self.posts_dir])
 
     def test_render_post(self):
         self.add_post("2024-05-05-hello", "title: Hello\n\nHello, World!")
@@ -98,7 +96,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
     def test_skips_unpublished_posts(self):
         self.add_post("2024-05-19-drafty", "title: Drafty\n\nHello, world!")
         self.loader = Loader(
-            self.posts_dir, include_drafts=False, now=datetime(2024, 5, 18, 22, 18)
+            [self.posts_dir], include_drafts=False, now=datetime(2024, 5, 18, 22, 18)
         )
 
         # When the site is generated before the publication date …
@@ -115,7 +113,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
     def test_includes_unpublished_posts_if_drafts_mode(self):
         self.add_post("2024-05-19-drafty", "title: Drafty\n\nHello, world!")
         self.loader = Loader(
-            self.posts_dir, include_drafts=True, now=datetime(2024, 5, 18, 22, 18)
+            [self.posts_dir], include_drafts=True, now=datetime(2024, 5, 18, 22, 18)
         )
         self.add_tpl(
             "index.html",

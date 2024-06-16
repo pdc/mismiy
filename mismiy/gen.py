@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 
 from chevron import render
 
-from .posts import Loader, Post, datetime_naïve
+from .loader import Loader, Post, datetime_naïve
 from .xml import Doc, Elt
 
 
@@ -51,9 +51,9 @@ class Gen:
         elif not public_path.exists():
             public_path.mkdir()
 
-        for post in loader.posts():
+        for page in loader.pages():
             self._render_1(
-                public_path, f"{post.name}.html", post.context(), "post.html"
+                public_path, f"{page.name}.html", page.context(), "post.html"
             )
         self.render_index(loader, public_path)
 
@@ -105,7 +105,7 @@ class Gen:
         # Feed metadata comes first
         doc.element("atom:id", {}, loader.id)
         doc.element("atom:title", {}, loader.title)
-        if url := loader.meta.get("url"):
+        if url := loader.url:
             doc.element(
                 "atom:link",
                 {"rel": "self", "href": urljoin(url, self.feed_href(page))},

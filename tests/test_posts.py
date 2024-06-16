@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 from uuid import UUID, uuid5
 
-from mismiy.posts import Post
+from mismiy.loader import Post
 
 
 class TestPost(unittest.TestCase):

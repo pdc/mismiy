@@ -10,7 +10,7 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from mismiy.gen import Gen
-from mismiy.posts import Loader
+from mismiy.loader import Loader
 
 
 class GeneratingEventHandler(FileSystemEventHandler):
@@ -140,11 +140,11 @@ def main(argv: list[str] = None):
         "Must be a locale specifier like `en_GB.UTF-8`.",
     )
     arg_parser.add_argument(
-        "posts_dir",
+        "pages_dirs",
         metavar="PATH",
-        nargs="?",
-        default="posts",
-        help="Directory with posts. Default is posts.",
+        nargs="*",
+        default=["posts"],
+        help="A directory with posts or pages. My be repeated. Default is just posts.",
     )
     args = arg_parser.parse_args(argv)
 
@@ -152,7 +152,9 @@ def main(argv: list[str] = None):
 
     now = args.as_of or datetime.now()
     include_drafts = args.drafts if args.drafts is not None else bool(args.watch)
-    loader = Loader(Path(args.posts_dir), include_drafts=include_drafts, now=now)
+    loader = Loader(
+        [Path(x) for x in args.pages_dirs], include_drafts=include_drafts, now=now
+    )
 
     gen = Gen(Path(args.templates_dir), Path(args.static_dir))
     gen.render_posts(loader, Path(args.out_dir))
@@ -161,7 +163,8 @@ def main(argv: list[str] = None):
         print("Watching for changes ...")
         observer = Observer()
         posts_handler = GeneratingEventHandler(gen, loader, Path(args.out_dir))
-        observer.schedule(posts_handler, args.posts_dir, recursive=True)
+        for d in args.pages_dirs:
+            observer.schedule(posts_handler, d, recursive=True)
         tpl_handler = TemplateFlushingEventHandler(gen, loader, Path(args.out_dir))
         observer.schedule(tpl_handler, args.templates_dir, recursive=True)
         static_handler = CopyingEventHandler(Path(args.static_dir), Path(args.out_dir))
