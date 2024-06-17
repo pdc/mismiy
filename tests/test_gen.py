@@ -2,9 +2,9 @@ import unittest
 from datetime import datetime
 
 from mismiy.gen import Gen
-from mismiy.loader import Loader, Person, Post
+from mismiy.loader import Loader, Page, Person
 
-from .test_posts_loader import TempDirMixin
+from .mixins import TempDirMixin
 
 
 class TestGen(TempDirMixin, unittest.TestCase):
@@ -22,7 +22,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
 
         self.tpl_dir = self.dir_path / "tpl"
         self.tpl_dir.mkdir()
-        self.add_tpl("post.html", "Post template")
+        self.add_tpl("post.html", "Page template")
         self.add_tpl("index.html", "Index template")
 
         self.pub_dir = self.dir_path / "pub"
@@ -131,7 +131,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.assertRegex(index_html, r"2024-05-19-drafty\.html")
 
     def test_can_create_atom_entry(self):
-        post = Post(
+        post = Page(
             "2024-05-25-atomic",
             {
                 "title": "Atomic title",
@@ -187,7 +187,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         # - Summary (optional since we have content)
 
     def test_can_set_updated_in_metadata(self):
-        post = Post(
+        post = Page(
             "2024-05-25-updated",
             {
                 "title": "2024-05-25-updated title",

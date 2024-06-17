@@ -2,19 +2,19 @@ import unittest
 from datetime import datetime
 from uuid import UUID, uuid5
 
-from mismiy.loader import Post
+from mismiy.loader import Page
 
 
-class TestPost(unittest.TestCase):
+class TestPage(unittest.TestCase):
     def test_renders_markdown(self):
-        post = Post("2024-05-05--hello", {"title": "Hello"}, "Hello, *world*!")
+        post = Page("2024-05-05--hello", {"title": "Hello"}, "Hello, *world*!")
 
         result = post.context()
 
         self.assertEqual(result["body"], "<p>Hello, <em>world</em>!</p>\n")
 
     def test_includes_meta_in_context(self):
-        post = Post("2024-05-05--hello", {"title": "Hello"}, "Hello, *world*!")
+        post = Page("2024-05-05--hello", {"title": "Hello"}, "Hello, *world*!")
 
         result = post.context()
 
@@ -31,7 +31,7 @@ class TestPost(unittest.TestCase):
         )
 
     def test_converts_datetime_to_dict(self):
-        post = Post(
+        post = Page(
             "2024-05-19--hello",
             {
                 "title": "Hello",
@@ -59,15 +59,17 @@ class TestPost(unittest.TestCase):
         )
 
     def test_dotdotslash_if_slahes_in_name(self):
-        post = Post("2024/05/05/hello", {"title": "Hello"}, "Hello, *world*!")
+        post = Page("2024/05/05/hello", {"title": "Hello"}, "Hello, *world*!")
 
         result = post.context()
 
         # Then the dotdotslash item is the path back to the root of the posts.
         self.assertEqual(result["dotdotslash"], "../../../")
 
+
+class TestPost(unittest.TestCase):
     def test_can_make_id_relative_to_uuid(self):
-        post = Post("2024-05-25-hello", {"title": "Hello"}, "Hello, *world*!")
+        post = Page("2024-05-25-hello", {"title": "Hello"}, "Hello, *world*!")
 
         self.assertEqual(
             post.make_id("urn:uuid:6f84b6fb-779e-5599-8a07-c133c2d6bd47"),
@@ -75,7 +77,7 @@ class TestPost(unittest.TestCase):
         )
 
     def test_can_make_id_relative_to_tag(self):
-        post = Post("2024-05-25-hello", {"title": "Hello"}, "Hello, *world*!")
+        post = Page("2024-05-25-hello", {"title": "Hello"}, "Hello, *world*!")
 
         self.assertEqual(
             post.make_id("tag:alleged.org.uk,2024:mismiy:test"),
@@ -83,7 +85,7 @@ class TestPost(unittest.TestCase):
         )
 
     def test_can_make_id_relative_to_http(self):
-        post = Post("2024-05-25-hello", {"title": "Hello"}, "Hello, *world*!")
+        post = Page("2024-05-25-hello", {"title": "Hello"}, "Hello, *world*!")
 
         self.assertEqual(
             post.make_id("http://some.example/foo/bar"),
@@ -91,7 +93,7 @@ class TestPost(unittest.TestCase):
         )
 
     def test_treats_id_in_meta_as_canonical(self):
-        post = Post(
+        post = Page(
             "2024-05-25-hello",
             {"title": "Hello", "id": "tag:alleged.org.uk,2024:mismiy:test:1234"},
             "Hello, *world*!",

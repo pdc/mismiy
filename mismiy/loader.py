@@ -70,7 +70,7 @@ class Person:
 
 
 @dataclass
-class Post:
+class Page:
     name: str
     meta: Mapping[str, Any]
     body: str
@@ -117,7 +117,7 @@ class Post:
         return f"{feed_id}{slash}{self.name}"
 
     @classmethod
-    def from_text(cls, name: str, text: str, tz: tzinfo) -> "Post":
+    def from_text(cls, name: str, text: str, tz: tzinfo) -> "Page":
         """Create a post from this document.
 
         Arguments:
@@ -141,7 +141,7 @@ class Post:
         return cls(name, meta, parts[1])
 
     @classmethod
-    def from_file(cls, name: str, file: Path, tz: tzinfo) -> "Post":
+    def from_file(cls, name: str, file: Path, tz: tzinfo) -> "Page":
         return cls.from_text(name, file.read_text(encoding="UTF-8"), tz)
 
 
@@ -225,7 +225,7 @@ class Source:
                 name = str(page_path.relative_to(self.pages_dir)).removesuffix(
                     ".markdown"
                 )
-                page = Post.from_file(name, page_path, tz=self.tz)
+                page = Page.from_file(name, page_path, tz=self.tz)
 
                 published = page.meta.get("published")
                 if published is None or published > self.now:

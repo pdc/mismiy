@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from mismiy import command
 
-from .test_posts_loader import TempDirMixin
+from .mixins import TempDirMixin
 
 
 class TestCommand(TempDirMixin, unittest.TestCase):

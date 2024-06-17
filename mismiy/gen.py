@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 
 from chevron import render
 
-from .loader import Loader, Post, datetime_naïve
+from .loader import Loader, Page, datetime_naïve
 from .xml import Doc, Elt
 
 
@@ -148,7 +148,7 @@ class Gen:
             doc.append(self._atom_entry(loader, post))
         return doc
 
-    def _atom_entry(self, loader: Loader, post: Post) -> Elt:
+    def _atom_entry(self, loader: Loader, post: Page) -> Elt:
         result = Elt("atom:entry")
         result.element("atom:id", post.make_id(loader.id))
         result.element("atom:title", post.meta["title"])

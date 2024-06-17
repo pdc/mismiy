@@ -1,21 +1,10 @@
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
-from shutil import rmtree
-from tempfile import mkdtemp
 
 from mismiy.loader import Loader, Person, Source
 
-
-class TempDirMixin:
-    def setUp(self):
-        super().setUp()
-        self.test_dir = mkdtemp(prefix="TestPostsLoader")
-        self.dir_path = Path(self.test_dir)
-
-    def tearDown(self):
-        rmtree(self.dir_path)
-        super().tearDown()
+from .mixins import TempDirMixin
 
 
 class TestSource(TempDirMixin, unittest.TestCase):
