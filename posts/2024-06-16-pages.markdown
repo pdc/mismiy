@@ -1,40 +1,44 @@
 title: Pages that are not posts
 author: Damian Cugley
+updated: 2024-06-18
 
-Even a basic blog needs some non-post pages (an about page, perhaps a
-[a privacy policy]). Or we could use Mismiy to generate arbitrary
-documention hierarchies, with the blog posts being just a little
-feature on the side.
+Even a basic blog needs some non-post pages (an about page, perhaps [a privacy
+policy]). Or we could use Mismiy to generate arbitrary documention
+hierarchies, with the blog posts being just a little feature on the side.
 
-We already load posts from any directory hierarchy so
-`2024/06/15/blah.markdown` can be used to provide slashier URLs than
-with `2024-06-15-blah.markdown`, so our non-post pages can do that
-same. The only real difference is whether they are included in the
-index page’s reverse chronological order and the atom feed. So this new
-feature basically boils down to making _posts_ a special type
-of _page_.
+Not-post pages can be read from a directory the same as posts. The only real
+difference is whether they are included in the index page’s reverse
+chronological order and the atom feed. In fact posts are just a special kind
+of page.
 
-The new schema is as follows: first, there will be more than
+The new plan is as follows: first, there can be more than
 one _source_ of pages, each a directory containing `.markdown` files.
-So we might have `posts` and `pages` directories, for example. These
+So we might have directories named `posts` and `pages`. These
 get merged together on the generated site, so they better use
-non-overlapping file names.
+non-overlapping file names. This is easy if post files always start with the date.
 
 Second, sources have an property named _kind_ that is either `page`
-(the default), or a special kind of page, of which our only example so
-far is `post`. The _kind_ property is set explictly in in the
-`meta.yaml` file, or failing that, the `posts` directory will have kind
+(the default), or `post`. The _kind_ property might be set explictly in in the
+`meta.yaml` file, but failing that, the `posts` directory will have kind
 `post`, and any other will be `page`.
 
 The kind of page controls the templates used for rendering pages
-(`post.html.mustache` vesus `page.html.mustache`). The index template
-will need to link to both kinds of content but fir a first version it
-is probably OK to hard-code links in to the template.
+(`post.html.mustache` versus `page.html.mustache`). The index template
+will need to link to both kinds of content, but for a first version it
+is probably OK to hard-code links in to the template for `index.html`. In Markdown
+normal relative links will work, so we can write
 
-Feed files will be created for `post` sources. For now we assume one
-feed for all posts. Same for the reverse-chonological list of posts on
-the index. I can work out how to do multi-feed sites when I find I have
-a need for one.
+    Blah blah link to [about] blah
+
+    [about]: about.html
+
+And get something like
+
+> Blah blah link to [about](about.html) blah
+
+Feed files will be created for `post` sources. For now we assume there will be
+a single feed even if there is more than one post source. We can work out how
+to do multi-feed sites when we find we have a need for one.
 
 
 [a privacy policy]: https://www.jwz.org/xscreensaver/google.html
