@@ -43,7 +43,7 @@ class Gen:
             for file in self.tpl_dir.glob("**/*.mustache")
         }
 
-    def render_posts(self, loader: Loader, public_path: Path | str):
+    def render_pages(self, loader: Loader, public_path: Path | str):
         """Generate HTML files in the specified directory."""
         public_path = Path(public_path)
         if self.static_dir:
@@ -52,8 +52,9 @@ class Gen:
             public_path.mkdir()
 
         for page in loader.pages():
+            layout = page.meta["kind"]
             self._render_1(
-                public_path, f"{page.name}.html", page.context(), "post.html"
+                public_path, f"{page.name}.html", page.context(), f"{layout}.html"
             )
         self.render_index(loader, public_path)
 

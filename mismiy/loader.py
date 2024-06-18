@@ -9,7 +9,7 @@ from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
 
 import mistletoe
-from strictyaml import Datetime, Email, Map, Optional, Str, Url
+from strictyaml import Datetime, Email, Enum, Map, Optional, Str, Url
 from strictyaml import load as yaml_load
 
 from .xml import Elt
@@ -41,6 +41,7 @@ meta_schema = Map(
         Optional("id"): Str(),
         Optional("url"): Url(),
         Optional("tz"): Str(),
+        Optional("kind"): Enum(["post", "page"]),
     }
 )
 # In the above, the `id` fields are `Str` rather than `Url` because
@@ -174,6 +175,11 @@ class Source:
         self.now = now.astimezone(self.tz) if now else datetime.now(self.tz)
 
     @property
+    def kind(self):
+        """Return one of `page` or `post`."""
+        return self.meta["kind"]
+
+    @property
     def id(self):
         return self.meta["id"]
 
@@ -208,6 +214,8 @@ class Source:
                 while p.name == "posts":
                     p = p.parent
                 self._meta["title"] = p.name
+            if "kind" not in self.meta:
+                self.meta["kind"] = "post" if self.pages_dir.name == "posts" else "page"
             if tz_name := self._meta.get("tz"):
                 self._meta["tz"] = ZoneInfo(tz_name)
             else:
@@ -219,6 +227,7 @@ class Source:
         self._pages = None
 
     def pages(self):
+        kind = self.kind
         if self._pages is None:
             self._pages = []
             for page_path in sorted(self.pages_dir.glob("**/*.markdown")):
@@ -228,11 +237,13 @@ class Source:
                 page = Page.from_file(name, page_path, tz=self.tz)
 
                 published = page.meta.get("published")
-                if published is None or published > self.now:
+                is_draft = published > self.now if published else self.kind == "post"
+                if is_draft:
                     if self.include_drafts:
                         page.meta["is_draft"] = True
                     else:
                         continue
+                page.meta["kind"] = kind
                 self._pages.append(page)
         return self._pages
 
@@ -286,7 +297,13 @@ class Loader:
 
     def posts(self):
         """Pages that have ‘post’ nature."""
-        return self.pages()
+        posts = [
+            p
+            for source in self.sources
+            if source.kind == "post"
+            for p in source.pages()
+        ]
+        return posts
 
 
 def datetime_naïve(d: datetime) -> bool:

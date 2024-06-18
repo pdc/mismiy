@@ -20,13 +20,17 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "tz: Europe/London\n"
         )
 
+        self.pages_dir = self.dir_path / "pages"
+        self.pages_dir.mkdir()
+
         self.tpl_dir = self.dir_path / "tpl"
         self.tpl_dir.mkdir()
-        self.add_tpl("post.html", "Page template")
+        self.add_tpl("post.html", "Default post template")
+        self.add_tpl("page.html", "Default page template")
         self.add_tpl("index.html", "Index template")
 
         self.pub_dir = self.dir_path / "pub"
-        self.loader = Loader([self.posts_dir])
+        self.loader = Loader([self.posts_dir, self.pages_dir])
 
     def test_render_post(self):
         self.add_post("2024-05-05-hello", "title: Hello\n\nHello, World!")
@@ -40,9 +44,34 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.add_tpl("footer.html", "<aside>Footer</aside>\n")
 
         gen = Gen(self.tpl_dir)
-        gen.render_posts(self.loader, self.pub_dir)
+        gen.render_pages(self.loader, self.pub_dir)
 
         html_path = self.pub_dir / "2024-05-05-hello.html"
+        self.assertTrue(html_path.exists())
+        self.assertEqual(
+            html_path.read_text(),
+            "<!DOCTYPE html><title>Hello</title><body>\n"
+            "<h1>Hello</h1>\n"
+            "<p>Hello, World!</p>\n\n"
+            "<aside>Footer</aside>\n"
+            "</body>\n",
+        )
+
+    def test_render_page(self):
+        self.add_page("about", "title: Hello\n\nHello, World!")
+        self.add_tpl(
+            "page.html",
+            "<!DOCTYPE html><title>{{ title }}</title><body>\n"
+            "<h1>{{ title }}</h1>\n"
+            "{{{ body }}}\n"
+            "{{> footer.html }}</body>\n",
+        )
+        self.add_tpl("footer.html", "<aside>Footer</aside>\n")
+
+        gen = Gen(self.tpl_dir)
+        gen.render_pages(self.loader, self.pub_dir)
+
+        html_path = self.pub_dir / "about.html"
         self.assertTrue(html_path.exists())
         self.assertEqual(
             html_path.read_text(),
@@ -67,7 +96,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         )
 
         gen = Gen(self.tpl_dir)
-        gen.render_posts(self.loader, self.pub_dir)
+        gen.render_pages(self.loader, self.pub_dir)
 
         # Then the index shows the most recent item first.
         html_path = self.pub_dir / "index.html"
@@ -87,7 +116,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         (static_dir / "man.css").write_text("body { font-family: Helvetica; }")
 
         gen = Gen(self.tpl_dir, static_dir)
-        gen.render_posts(self.loader, self.pub_dir)
+        gen.render_pages(self.loader, self.pub_dir)
 
         self.assertEqual(
             (self.pub_dir / "man.css").read_text(), "body { font-family: Helvetica; }"
@@ -101,7 +130,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
 
         # When the site is generated before the publication date …
         gen = Gen(self.tpl_dir)
-        gen.render_posts(self.loader, self.pub_dir)
+        gen.render_pages(self.loader, self.pub_dir)
 
         # Then the draft post is omitted.
         self.assertFalse((self.pub_dir / "2024-05-19-drafty.html").exists())
@@ -122,7 +151,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
 
         # When the site is generated before the publication date with include_drafts true …
         gen = Gen(self.tpl_dir)
-        gen.render_posts(self.loader, self.pub_dir)
+        gen.render_pages(self.loader, self.pub_dir)
 
         # Then the draft post is included.
         self.assertTrue((self.pub_dir / "2024-05-19-drafty.html").exists())
@@ -289,7 +318,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.add_post("2024-05-06-hello", "title: Greetings\n\nGreetings, World!")
 
         gen = Gen(self.tpl_dir)
-        gen.render_posts(self.loader, self.pub_dir)
+        gen.render_pages(self.loader, self.pub_dir)
 
         feed_file = self.pub_dir / "feed.xml"
         self.assertTrue(feed_file.exists())
@@ -300,6 +329,9 @@ class TestGen(TempDirMixin, unittest.TestCase):
 
     def add_post(self, name: str, text: str):
         (self.posts_dir / f"{name}.markdown").write_text(text)
+
+    def add_page(self, name: str, text: str):
+        (self.pages_dir / f"{name}.markdown").write_text(text)
 
     def add_tpl(self, name: str, text: str):
         (self.tpl_dir / f"{name}.mustache").write_text(text)

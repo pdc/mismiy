@@ -22,7 +22,7 @@ class GeneratingEventHandler(FileSystemEventHandler):
     def again(self):
         start = time.perf_counter()
         self.loader.flush()
-        self.gen.render_posts(self.loader, self.out_dir)
+        self.gen.render_pages(self.loader, self.out_dir)
         duration = time.perf_counter() - start
         print(f"Generated again in {duration:.2f}s.")
 
@@ -48,7 +48,7 @@ class TemplateFlushingEventHandler(FileSystemEventHandler):
     def again(self):
         start = time.perf_counter()
         self.gen.flush_tpls()
-        self.gen.render_posts(self.loader, self.out_dir)
+        self.gen.render_pages(self.loader, self.out_dir)
         duration = time.perf_counter() - start
         print(f"Reloaded templates and generated again in {duration:.2f}s.")
 
@@ -157,7 +157,7 @@ def main(argv: list[str] = None):
     )
 
     gen = Gen(Path(args.templates_dir), Path(args.static_dir))
-    gen.render_posts(loader, Path(args.out_dir))
+    gen.render_pages(loader, Path(args.out_dir))
 
     if args.watch:
         print("Watching for changes ...")

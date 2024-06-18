@@ -8,7 +8,7 @@ from .mixins import TempDirMixin
 
 
 class TestSource(TempDirMixin, unittest.TestCase):
-    def test_posts_are_retrieved_in_file_name_order(self):
+    def test_pages_are_retrieved_in_file_name_order(self):
         (self.dir_path / "2024-05-05-quince.markdown").write_text(
             "title: Quince\n\nHello, quince."
         )
@@ -32,7 +32,7 @@ class TestSource(TempDirMixin, unittest.TestCase):
         self.assertEqual(result[0].body, "Hello, vote.")
         self.assertEqual(result[0].name, "2024-05-02-vote")
 
-    def test_posts_have_optional_published_datetime(self):
+    def test_pages_have_optional_published_datetime(self):
         (self.dir_path / "2024-05-18-quince.markdown").write_text(
             "title: Greeting\npublished: 2024-05-19\n\nHello, world."
         )
@@ -55,26 +55,58 @@ class TestSource(TempDirMixin, unittest.TestCase):
             ],
         )
 
-    def test_excludes_posts_published_in_future(self):
-        # Given a post for a particular date …
+    def test_excludes_pages_published_in_future(self):
+        # Given a page for a particular date …
         (self.dir_path / "2024-05-21-future.markdown").write_text(
             "title: Greeting\npublished: 2024-05-21\n\nHello, world."
         )
 
-        # When we load posts before the post is published …
+        # When we load pages before the post is published …
         source = Source(self.dir_path, now=datetime(2024, 5, 20, tzinfo=timezone.utc))
         result = source.pages()
 
         # Then we get an empty list because unpublished post omitted.
         self.assertFalse(result)
 
-    def test_includes_posts_if_include_drafts(self):
+    def test_excludes_posts_without_published_date(self):
+        # Given a post with no particular date …
+        (self.dir_path / "undated.markdown").write_text(
+            "title: Greeting\n\nHello, world."
+        )
+        (self.dir_path / "META.yaml").write_text("kind: post\n")
+
+        # When we load pages before the post is published …
+        source = Source(self.dir_path, now=datetime(2024, 6, 17, tzinfo=timezone.utc))
+        result = source.pages()
+
+        # Then we get an empty list because unpublished post omitted.
+        self.assertFalse(result)
+
+    def test_includes_undated_pages_though(self):
+        # Given a page with no particular date …
+        (self.dir_path / "undated.markdown").write_text(
+            "title: Greeting\n\nHello, world."
+        )
+        (self.dir_path / "META.yaml").write_text("kind: page\n")
+
+        # When we load pages before the post is published …
+        source = Source(self.dir_path, now=datetime(2024, 6, 17, tzinfo=timezone.utc))
+        result = source.pages()
+
+        # Then page is not a draft (because it isn’t a post).
+        self.assertFalse(result[0].meta.get("is_draft"))
+
+    def test_includes_pages_if_caller_says_to_include_drafts(self):
         # Given a post for a particular date …
         (self.dir_path / "2024-05-21-future.markdown").write_text(
             "title: Greeting\npublished: 2024-05-21\n\nHello, world."
         )
+        (self.dir_path / "undated.markdown").write_text(
+            "title: Greeting\n\nWhat even is time?"
+        )
+        (self.dir_path / "META.yaml").write_text("kind: post\n")
 
-        # When we load posts before the post is published …
+        # When we load pages with the include_drafts flag …
         source = Source(
             self.dir_path,
             now=datetime(2024, 5, 20, tzinfo=timezone.utc),
@@ -82,8 +114,9 @@ class TestSource(TempDirMixin, unittest.TestCase):
         )
         result = source.pages()
 
-        # Then we get an empty list because unpublished post omitted.
+        # Then we get draft posts.
         self.assertTrue(result[0].meta.get("is_draft"))
+        self.assertTrue(result[1].meta.get("is_draft"))
 
     def test_allows_author_to_be_string(self):
         # Given a post with author supplied as just a string …
@@ -114,6 +147,51 @@ class TestSource(TempDirMixin, unittest.TestCase):
             result[0].meta.get("author"),
             Person("Alice de Winter", "https://dewinter.example/alice"),
         )
+
+    # Kinds of source (page or post):
+
+    def test_random_directory_is_page(self):
+        dir_path = self.dir_path / "banana_reviews"
+        source = Source(dir_path)
+
+        self.assertEqual(source.kind, "page")
+
+    def test_posts_directory_is_post_kind(self):
+        dir_path = self.dir_path / "posts"
+        source = Source(dir_path)
+
+        self.assertEqual(source.kind, "post")
+
+    def test_can_set_source_kind_in_meta(self):
+        dir_path = self.dir_path / "fred_gormghast"
+        dir_path.mkdir()
+        meta_file = dir_path / "META.yaml"
+        meta_file.write_text("kind: post\n")
+        source = Source(dir_path)
+
+        self.assertEqual(source.kind, "post")
+
+    def test_posts_acquire_kind_from_source(self):
+        dir_path = self.dir_path / "posts"
+        dir_path.mkdir()
+        page_file = dir_path / "2024-06-17-hello.markdown"
+        page_file.write_text("title: Hello\n\nHello, world\n")
+        source = Source(dir_path)
+
+        (page,) = source.pages()
+
+        self.assertEqual(page.meta["kind"], "post")
+
+    def test_pages_acquire_kind_from_source(self):
+        dir_path = self.dir_path / "pages"
+        dir_path.mkdir()
+        page_file = dir_path / "hello.markdown"
+        page_file.write_text("title: Hello\n\nHello, world\n")
+        source = Source(dir_path)
+
+        (page,) = source.pages()
+
+        self.assertEqual(page.meta["kind"], "page")
 
     # Metadata needed for feed:
 
@@ -194,10 +272,30 @@ class TestLoader(TempDirMixin, unittest.TestCase):
         loader = Loader([dir_1, dir_2])
 
         # Then we get a combined list of pages.
-        print(loader.pages())
-        print(list(loader.sources[1].pages_dir.glob("*.markdown")))
-        print(list(loader.sources[1].pages()))
         self.assertCountEqual(
             [x.meta["title"] for x in loader.pages()],
             ["Marzipan", "Creosote"],
+        )
+
+    def test_combines_post_from_post_sources(self):
+        # Given a 2 directories with pages in them…
+        dir_1 = self.dir_path / "bananas/posts"
+        dir_1.mkdir(parents=True)
+        dir_2 = self.dir_path / "docs"
+        dir_2.mkdir()
+        (dir_1 / "2024-06-16-marzipan.markdown").write_text("title: Marzipan\n\nHello")
+        (dir_2 / "about.markdown").write_text(
+            "title: Creosote\npublished: 2024-06-16\n\nHello"
+        )
+        # And only one of them is posts …
+        (dir_1 / "META.yaml").write_text("kind: post")
+
+        # When we process these blogs …
+        loader = Loader([dir_1, dir_2])
+
+        # Then we get a posts from post sources.
+        print(loader.posts())
+        self.assertCountEqual(
+            [x.meta["title"] for x in loader.posts()],
+            ["Marzipan"],
         )
