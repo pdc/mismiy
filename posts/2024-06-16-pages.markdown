@@ -19,7 +19,7 @@ non-overlapping file names. This is easy if post files always start with the dat
 
 Second, sources have an property named _kind_ that is either `page`
 (the default), or `post`. The _kind_ property might be set explictly in in the
-`meta.yaml` file, but failing that, the `posts` directory will have kind
+`META.yaml` file, but failing that, the `posts` directory will have kind
 `post`, and any other will be `page`.
 
 The kind of page controls the templates used for rendering pages

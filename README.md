@@ -9,6 +9,6 @@ the results in to a directory. Modern CSS and HTML5 between them mean there
 is little need for preprocessing CSS or elaborate JavaScript.
 
 Status: We have the bare minimum to be a blog:
-- an index page with links to posts,
+- an index page with reverse-chronological list of posts,
 - post pages with a link back to the index, and
 - an Atom feed.

@@ -51,33 +51,37 @@ class Gen:
         elif not public_path.exists():
             public_path.mkdir()
 
+        index_page = None
         for page in loader.pages():
+            if page.name == "index":
+                index_page = page
+                continue
+
             layout = page.meta["kind"]
             self._render_1(
                 public_path, f"{page.name}.html", page.context(), f"{layout}.html"
             )
-        self.render_index(loader, public_path)
+        self.render_index(loader, public_path, index_page)
 
         post_count = len(loader.posts())
         page_count = (post_count + self.page_size - 1) // self.page_size
         for i in range(page_count):
-            feed_path = public_path / (self.feed_href(i + 1))
+            feed_path = public_path / (self.feed_href(page=i + 1))
             with feed_path.open("w", encoding="UTF-8") as f:
                 self._atom_feed(loader, page=(i + 1)).write_to(f)
 
-    def render_index(self, loader: Loader, public_path: Path):
-        links = [Link("alternate", self.feed_href(1), type="application/atom+xml")]
-        self._render_1(
-            public_path,
-            "index.html",
-            {
-                "reverse_chronological": [
-                    post.context() for post in reversed(loader.posts())
-                ],
-                "is_index": True,
-                "links": links,
-            },
-        )
+    def render_index(self, loader: Loader, public_path: Path, index_page: Page | None):
+        links = [Link("alternate", self.feed_href(page=1), type="application/atom+xml")]
+        context = {
+            "reverse_chronological": [
+                post.context() for post in reversed(loader.posts())
+            ],
+            "is_index": True,
+            "links": links,
+        }
+        if index_page:
+            context.update(index_page.context())
+        self._render_1(public_path, "index.html", context)
 
     def _render_1(
         self,

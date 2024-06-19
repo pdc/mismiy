@@ -82,7 +82,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "</body>\n",
         )
 
-    def test_renders_index_file(self):
+    def test_renders_index_page(self):
         self.add_post("2024-05-05-hello", "title: Hello\n\nHello, World!")
         self.add_post("2024-05-06-hello", "title: Greetings\n\nGreetings, World!")
         self.add_tpl(
@@ -104,6 +104,40 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.assertEqual(
             html_path.read_text(),
             '<link rel=alternate href="feed.xml" type="application/atom+xml">\n'
+            "<ul>\n"
+            '  <li><a href="2024-05-06-hello.html">Greetings</a></li>\n'
+            '  <li><a href="2024-05-05-hello.html">Hello</a></li>\n'
+            "</ul>\n",
+        )
+
+    def test_renders_index_page_with_text(self):
+        self.add_post("2024-05-05-hello", "title: Hello\n\nHello, World!")
+        self.add_post("2024-05-06-hello", "title: Greetings\n\nGreetings, World!")
+        self.add_tpl(
+            "index.html",
+            '{{#links}}<link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>\n{{/links}}\n'
+            "<article>\n"
+            "{{{ body }}}</article>\n"
+            "<ul>\n"
+            "  {{# reverse_chronological }}\n"
+            '  <li><a href="{{ href }}">{{ title }}</a></li>\n'
+            "  {{/ reverse_chronological }}\n"
+            "</ul>\n",
+        )
+        self.add_page("index", "title: Welcome\n\nHello, world!")
+
+        gen = Gen(self.tpl_dir)
+        gen.render_pages(self.loader, self.pub_dir)
+
+        # Then the index shows the most recent item first.
+        html_path = self.pub_dir / "index.html"
+        self.assertTrue(html_path.exists())
+        self.assertEqual(
+            html_path.read_text(),
+            '<link rel=alternate href="feed.xml" type="application/atom+xml">\n'
+            "<article>\n"
+            "<p>Hello, world!</p>\n"
+            "</article>\n"
             "<ul>\n"
             '  <li><a href="2024-05-06-hello.html">Greetings</a></li>\n'
             '  <li><a href="2024-05-05-hello.html">Hello</a></li>\n'
@@ -242,7 +276,6 @@ class TestGen(TempDirMixin, unittest.TestCase):
         result = gen._atom_feed(self.loader, page=1)
 
         # Then it is an XML doc with root `atom:feed`.
-        print(result.to_string())
         self.assertEqual(result.etype, "atom:feed")
         self.assertEqual(
             result.find("atom:link", {"rel": "self"}).attrs["href"],
@@ -273,7 +306,6 @@ class TestGen(TempDirMixin, unittest.TestCase):
         gen.page_size = 12
 
         result = gen._atom_feed(self.loader, page=1)
-        print(result.to_string())
 
         # Then it has the most recent 12 posts
         self.assertEqual(

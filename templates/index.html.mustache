@@ -18,8 +18,10 @@
             }
 
             @media (min-width: 36em) {
-                p.text {
+                section.text {
                     grid-column: 2 / span 2;
+                    margin-top: 2lh;
+                    margin-bottom: 2lh;
                 }
                 h1 {
                     grid-column: 2 / span 2;
@@ -53,11 +55,11 @@
         {{/links}}
     </head>
     <body>
-        {{> header.html }}
-        <p class="text">
-            Mismiy is yet another static site generator.
-        </p>
-        <h1>Blog index</h1>
+        {{>header.html}}
+        <section class="text">
+            {{{body}}}
+        </section>
+        <h1>Build log (blog)</h1>
         <ul class="main">
             {{# reverse_chronological }}
             <li>
