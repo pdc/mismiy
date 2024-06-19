@@ -20,7 +20,7 @@ class TestCommand(TempDirMixin, unittest.TestCase):
             [Path("p")], include_drafts=False, now=datetime(2024, 5, 20, 21, 7, 0)
         )
         gen_cls.assert_called_with(Path("t"), Path("s"))
-        gen_cls.return_value.render_posts.assert_called_with(
+        gen_cls.return_value.render_pages.assert_called_with(
             loader_cls.return_value, Path("o")
         )
 
@@ -35,7 +35,7 @@ class TestCommand(TempDirMixin, unittest.TestCase):
             [Path("posts")], include_drafts=False, now=datetime(2024, 5, 20, 21, 7, 0)
         )
         gen_cls.assert_called_with(Path("templates"), Path("static"))
-        gen_cls.return_value.render_posts.assert_called_with(
+        gen_cls.return_value.render_pages.assert_called_with(
             loader_cls.return_value, Path("pub")
         )
 
