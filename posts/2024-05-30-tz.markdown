@@ -1,13 +1,13 @@
 title: Time zones!
 author: Damian Cugley
 
-Publication dates are are like a lot of things normally soecified as dates,
-where some action happens at a particilar moment in tme. Mismiy treats publication
+Publication dates are are like a lot of things normally specified as dates,
+where some action happens at a particular moment in time. Mismiy treats publication
 dates as datetimes, defaulting to midnight if you do not specify the time of 
 day. It also defaulted to the local time zone, which is probably fine, but
 caused trouble when I tried to set up a build & test action on GitHub.
 
-[GitHub Actions] are run on a Ubuntu server whose timezone is set to UTC. During
+[GitHub Actions] are run on a Ubuntu server whose time zone is set to UTC. During
 northern-hemisphere summer my computer is running on British Summer Time.
 It follows that my tests failed on CI as soon as they they tried to do anything
 with dates.
@@ -20,7 +20,7 @@ time zones, and the relatively new [`zoneinfo`] module provides support for
 modern Zone info specifications.
 
 Thus the `META.yaml` file we introduced to set blog ID and title can also 
-set `tz`. This specifies the time zone using the [IANA tz database] codes like `Europe/London`.
+set `tz`. This specifies the time zone using [IANA tz database] codes like `Europe/London`.
 Datetimes supplied without time zone will be assumed to be
 in the specified time zone. We have tests now to check that we deal with this on the
 way in, so that the Atom-feed-generating code can assume that the datetimes

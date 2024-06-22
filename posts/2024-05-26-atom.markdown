@@ -6,17 +6,19 @@ Let’s add an [Atom] resource to allow feed readers to read a feed of blog post
 ## A what
 
 Feed readers (also called RSS readers) like [NetNewsWire] are apps for keeping up with blogs
-by listing new posts on all your subscribed blogs. To make this work the
+by listing new posts on all your subscribed blogs.
+(They use the term _subscription_, but it is not a _paid_ subscription.)
+To make this work, the
 blog website publishes a file
 in a format like RSS, [Atom], or [JSON Feed]. When you subscribe to a blog,
-your reader app reads this periodically to see if new posts have been added.
+your reader app downloads this periodically to see if new posts have been added.
 
 The _feed_ document corresponds to the blog index page, and it has _entries_
 corresponding to blog posts.
 
 ## Mismiy version
 
-An [Atom] feed is an XML document. Rather than generate my XML with Mustache,
+An [Atom] feed is an XML document. Rather than generate XML with Mustache,
 we added a simple XML writer that generates tidy XML code. This slightly contradicts
 our aim of writing the minimum code, but using an XML writer avoids wasting
 time working out why a mustache template is not generating valid XML.
@@ -71,7 +73,7 @@ These are respectively
 - The [UUID URN namespace].
 
 How do we determine the ID for a given post?
-- If the feed identifier is one of the first two listed above we concatenate
+- If the feed identifier is one of the first two listed above, we concatenate
   the file name of the post to the feed identifier
   (since that is unique in the scope of the feed);
 - If the feed identifier is a UUID, we can generate the post’s UUID using
