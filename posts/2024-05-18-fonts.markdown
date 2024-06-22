@@ -1,5 +1,6 @@
 title: Fonts with less CSS
 author: Damian Cugley
+updated: 2024-06-22
 
 For Mismiy’s sample blog I wanted to create just enough of stylesheet to 
 be readable without going overboard with fancy font stuff.
@@ -64,6 +65,10 @@ I originally tried [Tahoma] and preferred its slightly more condendsed glyphs,
 but it requires a bit of letter spacing that would have looked wrong on the
 DejaVu or Vera fallbacks.
 
+* Update (2024-06-22). Turns out `font-size-adjust` still has only [limited
+availability], so for now I am using `font-size: 13px`, which experiment shows
+to be the correct size for matching Palatino. 
+
 ## Conclusion
 
 These are not necessarily the fonts I would use to create a personal site:
@@ -72,10 +77,10 @@ screens and web pages in mind. But for the minimal blog of this scrap of softwar
 Palatino, Helvetica, and Verdana will do.
 
 
-
 [1]: https://www.smashingmagazine.com/2009/09/complete-guide-to-css-font-stacks/
 [Palatino]: https://en.wikipedia.org/wiki/Palatino#Book_Antiqua
 [ctrl.blog article]: https://www.ctrl.blog/entry/font-stack-text.html
 [Tahoma]: https://en.wikipedia.org/wiki/Tahoma_(typeface)
 [Vera Sans]: https://en.wikipedia.org/wiki/Bitstream_Vera
 [Verdana]: https://en.wikipedia.org/wiki/Verdana
+[limited availability]: https://developer.mozilla.org/en-US/docs/Web/CSS/font-size-adjust#browser_compatibility
