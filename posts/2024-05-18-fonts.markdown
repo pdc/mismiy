@@ -65,9 +65,9 @@ I originally tried [Tahoma] and preferred its slightly more condendsed glyphs,
 but it requires a bit of letter spacing that would have looked wrong on the
 DejaVu or Vera fallbacks.
 
-* Update (2024-06-22). Turns out `font-size-adjust` still has only [limited
-availability], so for now I am using `font-size: 13px`, which experiment shows
-to be the correct size for matching Palatino. 
+**Update (2024-06-22).** Turns out `font-size-adjust` still has only [limited
+availability], so for now I am using `font-size: 0.85em`, which experiment shows
+to be about right for matching Palatino.
 
 ## Conclusion
 
