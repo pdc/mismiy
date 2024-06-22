@@ -169,7 +169,7 @@ class Gen:
         return result
 
     def feed_href(self, page):
-        return f"feed-{page}.xml" if page > 1 else "feed.xml"
+        return f"feed-{page}.atom" if page > 1 else "feed.atom"
 
     def fname(self, file: Path) -> str:
         return str(file.relative_to(self.tpl_dir)).removesuffix(".mustache")

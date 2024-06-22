@@ -103,7 +103,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.assertTrue(html_path.exists())
         self.assertEqual(
             html_path.read_text(),
-            '<link rel=alternate href="feed.xml" type="application/atom+xml">\n'
+            '<link rel=alternate href="feed.atom" type="application/atom+xml">\n'
             "<ul>\n"
             '  <li><a href="2024-05-06-hello.html">Greetings</a></li>\n'
             '  <li><a href="2024-05-05-hello.html">Hello</a></li>\n'
@@ -134,7 +134,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.assertTrue(html_path.exists())
         self.assertEqual(
             html_path.read_text(),
-            '<link rel=alternate href="feed.xml" type="application/atom+xml">\n'
+            '<link rel=alternate href="feed.atom" type="application/atom+xml">\n'
             "<article>\n"
             "<p>Hello, world!</p>\n"
             "</article>\n"
@@ -279,7 +279,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.assertEqual(result.etype, "atom:feed")
         self.assertEqual(
             result.find("atom:link", {"rel": "self"}).attrs["href"],
-            "https://mismiy.example/test/feed.xml",
+            "https://mismiy.example/test/feed.atom",
         )
         # And it has the required Atom feed elements.
         self.assertEqual(result.find("atom:id").text, self.loader.id)
@@ -317,10 +317,10 @@ class TestGen(TempDirMixin, unittest.TestCase):
             [f"Greetings from {i} May 2024" for i in range(25, 13, -1)],
         )
         self.assertEqual(
-            result.find("atom:link", {"rel": "next"}).attrs["href"], "feed-2.xml"
+            result.find("atom:link", {"rel": "next"}).attrs["href"], "feed-2.atom"
         )
         self.assertEqual(
-            result.find("atom:link", {"rel": "last"}).attrs["href"], "feed-3.xml"
+            result.find("atom:link", {"rel": "last"}).attrs["href"], "feed-3.atom"
         )
 
         # When we ask for page 2
@@ -336,13 +336,13 @@ class TestGen(TempDirMixin, unittest.TestCase):
             [f"Greetings from {i} May 2024" for i in range(13, 1, -1)],
         )
         self.assertEqual(
-            result.find("atom:link", {"rel": "first"}).attrs["href"], "feed.xml"
+            result.find("atom:link", {"rel": "first"}).attrs["href"], "feed.atom"
         )
         self.assertEqual(
-            result.find("atom:link", {"rel": "previous"}).attrs["href"], "feed.xml"
+            result.find("atom:link", {"rel": "previous"}).attrs["href"], "feed.atom"
         )
         self.assertEqual(
-            result.find("atom:link", {"rel": "next"}).attrs["href"], "feed-3.xml"
+            result.find("atom:link", {"rel": "next"}).attrs["href"], "feed-3.atom"
         )
 
     def test_render_feed(self):
@@ -352,7 +352,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         gen = Gen(self.tpl_dir)
         gen.render_pages(self.loader, self.pub_dir)
 
-        feed_file = self.pub_dir / "feed.xml"
+        feed_file = self.pub_dir / "feed.atom"
         self.assertTrue(feed_file.exists())
         self.assertRegex(
             feed_file.read_text(),
