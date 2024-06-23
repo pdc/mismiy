@@ -356,7 +356,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.assertTrue(feed_file.exists())
         self.assertRegex(
             feed_file.read_text(),
-            r'.*<atom:feed xmlns:atom="http://www.w3.org/2005/Atom">.*',
+            r'.*<feed xmlns="http://www.w3.org/2005/Atom">.*',
         )
 
     def add_post(self, name: str, text: str):

@@ -63,28 +63,37 @@ class Elt:
         for elt in self.elements:
             yield from elt.iter_prefixes()
 
-    def write_to(self, out, *, indent=None):
-        """Write the representation of this ekement and its content.
+    def write_to(self, out, *, indent=None, default_prefix=None):
+        """Write the representation of this element and its content.
 
         Optional argument `indent` is used to add whitespace at
         the start of each line.
         """
-        return self._write_to(self.attrs, indent or "", out)
+        return self._write_to(self.attrs, indent or "", default_prefix, out)
 
-    def _write_to(self, attrs, indent: str, out):
-        formatted = "".join(f' {k}="{escape(v)}"' for k, v in attrs.items())
+    def _write_to(self, attrs, indent: str, default_prefix: str | None, out):
+        if default_prefix is not None:
+            bad_attrs = [k for k in attrs.keys() if k.startswith(default_prefix)]
+            if bad_attrs:
+                raise ValueError(
+                    f'Cannot represent attrs {", ".join(bad_attrs)} '
+                    f'with default prefix {default_prefix.removesuffix(":")}'
+                )
+            etype = self.etype.removeprefix(default_prefix)
+            attrs = {k.removeprefix(default_prefix): v for k, v in attrs.items()}
+        else:
+            etype = self.etype
+        formatted = formatted = "".join(f' {k}="{escape(v)}"' for k, v in attrs.items())
 
         if self.elements:
-            out.write(f"{indent}<{self.etype}{formatted}>\n")
+            out.write(f"{indent}<{etype}{formatted}>\n")
             for elt in self.elements:
-                elt.write_to(out, indent=indent + "  ")
-            out.write(f"{indent}</{self.etype}>\n")
+                elt.write_to(out, indent=indent + "  ", default_prefix=default_prefix)
+            out.write(f"{indent}</{etype}>\n")
         elif self.text is not None:
-            out.write(
-                f"{indent}<{self.etype}{formatted}>{escape(self.text)}</{self.etype}>\n"
-            )
+            out.write(f"{indent}<{etype}{formatted}>{escape(self.text)}</{etype}>\n")
         else:
-            out.write(f"{indent}<{self.etype}{formatted}/>\n")
+            out.write(f"{indent}<{etype}{formatted}/>\n")
 
     def to_string(self):
         buf = io.StringIO()
@@ -111,11 +120,15 @@ class Doc(Elt):
 
     The dictionary of namespaces is supplied in advance, but only
     the prefixes that are actually used will be declared in the output
-    —this allos us to define all the prefixes we *might* use
-    without worrying abut whether they are or not. The empty string
-    is used for the entry for the default namespace. If it is not
-    given a definition then it will be assumed it is bound to the
-    XHTML namespace.
+    —this allows us to define all the prefixes we *might* use
+    without worrying abut whether they are or not.
+
+    As a further affectation the namespace of the root element will
+    be made the default namespace at the root, andthe qnames of
+    elements and attributes adjusted accordingly. This makes no
+    difference to the meaning of an XML document with namespaces,
+    but might make a difference to parsers hacked together out of
+    regexes.
     """
 
     def __init__(
@@ -130,14 +143,28 @@ class Doc(Elt):
         self.namespaces = NAMESPACES | (dict(namespaces) if namespaces else {})
 
     def write_to(self, out):
+        attrs = self.attrs
+
+        # We need to add namespace declarations to the attrs of the root elt.
         prefixes = set(self.iter_prefixes())
         prefixes.discard("xml")
-        namespaces = {
-            (f"xmlns:{prefix}" if prefix else "xmlns"): self.namespaces[prefix]
-            for prefix in sorted(prefixes)
-        }
-        attrs = self.attrs | namespaces
-        return self._write_to(attrs, "", out)
+        prefix, colon, local_name = self.etype.partition(":")
+        if colon:
+            # Use namepsace prefix to root element as default namespace.
+            default_prefix = prefix + ":"
+            prefixes.discard(prefix)
+            attrs["xmlns"] = self.namespaces[prefix]
+        else:
+            default_prefix = None
+        attrs.update(
+            {
+                f"xmlns:{prefix}": self.namespaces[prefix]
+                for prefix in sorted(prefixes)
+                if prefix
+            }
+        )
+
+        return self._write_to(attrs, "", default_prefix, out)
 
     @classmethod
     def from_element(cls, element: Elt, namespaces: Mapping[str, str]) -> Self:
