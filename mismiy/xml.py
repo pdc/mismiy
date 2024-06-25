@@ -4,15 +4,55 @@ import io
 from collections.abc import Mapping
 from typing import Self
 from xml.sax.saxutils import escape
+from abc import abstractmethod, ABC
 
 # Default namespace definitions. Individual Doc instances may override these.
 NAMESPACES = {
-    "": "http://www.w3.org/1999/xhtml",
-    "atom": "http://www.w3.org/2005/Atom",
+    "atom": "http://www.w3.org/2005/Atom",  # RFC 4287
+    "fh": "http://purl.org/syndication/history/1.0",  # RFC 5005
 }
 
 
-class Elt:
+class ElementBase(ABC):
+    @abstractmethod
+    def iter_prefixes(self):
+        """Yield prefixes used for element or attributes.
+
+        This is used when deciding which namespaces need declarations
+        on the root element of the document.
+        """
+
+    @abstractmethod
+    def write_to(self, out, *, indent=None, default_prefix=None):
+        """Write the representation of this element and its content.
+
+        Optional argument `indent` is used to add whitespace at
+        the start of each line.
+
+        Optional argument `default_prefix` is the prefix of a namespace
+        that is assumed to have a default-namespace declaration,
+        so qnames using that prefix should be changed to use no prefix.
+        """
+
+    def to_string(self):
+        """Return the XML representation of this element and its content.
+
+        Used in tests mostly.
+        """
+        buf = io.StringIO()
+        self.write_to(buf)
+        return buf.getvalue()
+
+    def find(self, etype: str, attrs: Mapping[str, str] = None) -> Self | None:
+        """Used in tests to find a matching child element."""
+        for element in self.elements:
+            if element.etype == etype and (
+                attrs is None or all(element.attrs[k] == v for k, v in attrs.items())
+            ):
+                return element
+
+
+class Elt(ElementBase):
     """One element in the XML document.
 
     The assumption is that it falls in to one of three categories:
@@ -95,18 +135,18 @@ class Elt:
         else:
             out.write(f"{indent}<{etype}{formatted}/>\n")
 
-    def to_string(self):
-        buf = io.StringIO()
-        self.write_to(buf)
-        return buf.getvalue()
 
-    def find(self, etype: str, attrs: Mapping[str, str] = None) -> Self | None:
-        """Used in tests to find a matching child element."""
-        for element in self.elements:
-            if element.etype == etype and (
-                attrs is None or all(element.attrs[k] == v for k, v in attrs.items())
-            ):
-                return element
+class HtmlAsXhtml(ElementBase):
+    """An XHTML div element containing XHTML supplied as an HTML string."""
+
+    def __init__(self, html: str):
+        pass
+
+    def iter_prefixes():
+        pass
+
+    def write_to(self, attrs, indent: str, default_prefix: str | None, out):
+        pass
 
 
 class Doc(Elt):
