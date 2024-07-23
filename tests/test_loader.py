@@ -9,16 +9,14 @@ from .mixins import TempDirMixin
 
 class TestSource(TempDirMixin, unittest.TestCase):
     def test_pages_are_retrieved_in_file_name_order(self):
-        (self.dir_path / "2024-05-05-quince.markdown").write_text(
+        (self.dir_path / "2024-05-05-quince.md").write_text(
             "title: Quince\n\nHello, quince."
         )
-        (self.dir_path / "2024-05-05-abacus.markdown").write_text(
+        (self.dir_path / "2024-05-05-abacus.md").write_text(
             "title: Abacus\n\nHello, abacus."
         )
-        (self.dir_path / "2024-05-02-vote.markdown").write_text(
-            "title: Vote\n\nHello, vote."
-        )
-        (self.dir_path / "2024-05-03-count.markdown").write_text(
+        (self.dir_path / "2024-05-02-vote.md").write_text("title: Vote\n\nHello, vote.")
+        (self.dir_path / "2024-05-03-count.md").write_text(
             "title: Count\n\nHello, count."
         )
         source = Source(self.dir_path)
@@ -33,15 +31,13 @@ class TestSource(TempDirMixin, unittest.TestCase):
         self.assertEqual(result[0].name, "2024-05-02-vote")
 
     def test_pages_have_optional_published_datetime(self):
-        (self.dir_path / "2024-05-18-quince.markdown").write_text(
+        (self.dir_path / "2024-05-18-quince.md").write_text(
             "title: Greeting\npublished: 2024-05-19\n\nHello, world."
         )
-        (self.dir_path / "2024-05-19-spum.markdown").write_text(
+        (self.dir_path / "2024-05-19-spum.md").write_text(
             "title: Greeting\n\nHello, world."
         )
-        (self.dir_path / "undated.markdown").write_text(
-            "title: Greeting\n\nHello, world."
-        )
+        (self.dir_path / "undated.md").write_text("title: Greeting\n\nHello, world.")
         source = Source(self.dir_path, include_drafts=True)
 
         result = source.pages()
@@ -57,7 +53,7 @@ class TestSource(TempDirMixin, unittest.TestCase):
 
     def test_excludes_pages_published_in_future(self):
         # Given a page for a particular date …
-        (self.dir_path / "2024-05-21-future.markdown").write_text(
+        (self.dir_path / "2024-05-21-future.md").write_text(
             "title: Greeting\npublished: 2024-05-21\n\nHello, world."
         )
 
@@ -70,9 +66,7 @@ class TestSource(TempDirMixin, unittest.TestCase):
 
     def test_excludes_posts_without_published_date(self):
         # Given a post with no particular date …
-        (self.dir_path / "undated.markdown").write_text(
-            "title: Greeting\n\nHello, world."
-        )
+        (self.dir_path / "undated.md").write_text("title: Greeting\n\nHello, world.")
         (self.dir_path / "META.yaml").write_text("kind: post\n")
 
         # When we load pages before the post is published …
@@ -84,9 +78,7 @@ class TestSource(TempDirMixin, unittest.TestCase):
 
     def test_includes_undated_pages_though(self):
         # Given a page with no particular date …
-        (self.dir_path / "undated.markdown").write_text(
-            "title: Greeting\n\nHello, world."
-        )
+        (self.dir_path / "undated.md").write_text("title: Greeting\n\nHello, world.")
         (self.dir_path / "META.yaml").write_text("kind: page\n")
 
         # When we load pages before the post is published …
@@ -98,10 +90,10 @@ class TestSource(TempDirMixin, unittest.TestCase):
 
     def test_includes_pages_if_caller_says_to_include_drafts(self):
         # Given a post for a particular date …
-        (self.dir_path / "2024-05-21-future.markdown").write_text(
+        (self.dir_path / "2024-05-21-future.md").write_text(
             "title: Greeting\npublished: 2024-05-21\n\nHello, world."
         )
-        (self.dir_path / "undated.markdown").write_text(
+        (self.dir_path / "undated.md").write_text(
             "title: Greeting\n\nWhat even is time?"
         )
         (self.dir_path / "META.yaml").write_text("kind: post\n")
@@ -120,7 +112,7 @@ class TestSource(TempDirMixin, unittest.TestCase):
 
     def test_allows_author_to_be_string(self):
         # Given a post with author supplied as just a string …
-        (self.dir_path / "2024-05-25-greet.markdown").write_text(
+        (self.dir_path / "2024-05-25-greet.md").write_text(
             "title: Greeting\nauthor: Alice de Winter\n\nHello, world."
         )
 
@@ -131,7 +123,7 @@ class TestSource(TempDirMixin, unittest.TestCase):
 
     def test_allows_author_to_have_uri(self):
         # Given an author supplied as an object …
-        (self.dir_path / "2024-05-25-greet.markdown").write_text(
+        (self.dir_path / "2024-05-25-greet.md").write_text(
             "title: Greeting\n"
             "author:\n"
             "  name: Alice de Winter\n"
@@ -174,7 +166,7 @@ class TestSource(TempDirMixin, unittest.TestCase):
     def test_posts_acquire_kind_from_source(self):
         dir_path = self.dir_path / "posts"
         dir_path.mkdir()
-        page_file = dir_path / "2024-06-17-hello.markdown"
+        page_file = dir_path / "2024-06-17-hello.md"
         page_file.write_text("title: Hello\n\nHello, world\n")
         source = Source(dir_path)
 
@@ -185,7 +177,7 @@ class TestSource(TempDirMixin, unittest.TestCase):
     def test_pages_acquire_kind_from_source(self):
         dir_path = self.dir_path / "pages"
         dir_path.mkdir()
-        page_file = dir_path / "hello.markdown"
+        page_file = dir_path / "hello.md"
         page_file.write_text("title: Hello\n\nHello, world\n")
         source = Source(dir_path)
 
@@ -257,14 +249,28 @@ class TestSource(TempDirMixin, unittest.TestCase):
 class TestLoader(TempDirMixin, unittest.TestCase):
     """Loader wraps oneor mor sources."""
 
+    def test_recognizes_markdown_and_md_files(self):
+        # Given a 1 directories with 2 pages in …
+        (self.dir_path / "2024-06-16-jam.markdown").write_text("title: Jam\n\nHello")
+        (self.dir_path / "2024-07-21-jelly.md").write_text("title: Jelly\n\nHello")
+
+        # When we process these blogs …
+        loader = Loader([self.dir_path])
+
+        # Then we get a combined list of pages.
+        self.assertCountEqual(
+            [x.meta["title"] for x in loader.pages()],
+            ["Jam", "Jelly"],
+        )
+
     def test_combines_pages_from_sources(self):
         # Given a 2 directories with pages in them…
         dir_1 = self.dir_path / "bananas/posts"
         dir_1.mkdir(parents=True)
         dir_2 = self.dir_path / "docs"
         dir_2.mkdir()
-        (dir_1 / "2024-06-16-marzipan.markdown").write_text("title: Marzipan\n\nHello")
-        (dir_2 / "about.markdown").write_text(
+        (dir_1 / "2024-06-16-jam.md").write_text("title: Marzipan\n\nHello")
+        (dir_2 / "about.md").write_text(
             "title: Creosote\npublished: 2024-06-16\n\nHello"
         )
 
@@ -283,8 +289,8 @@ class TestLoader(TempDirMixin, unittest.TestCase):
         dir_1.mkdir(parents=True)
         dir_2 = self.dir_path / "docs"
         dir_2.mkdir()
-        (dir_1 / "2024-06-16-marzipan.markdown").write_text("title: Marzipan\n\nHello")
-        (dir_2 / "about.markdown").write_text(
+        (dir_1 / "2024-06-16-marzipan.md").write_text("title: Marzipan\n\nHello")
+        (dir_2 / "about.md").write_text(
             "title: Creosote\npublished: 2024-06-16\n\nHello"
         )
         # And only one of them is posts …

@@ -39,8 +39,7 @@ class Gen:
     def flush_tpls(self):
         """Discard cached templates and reload."""
         self.templates = {
-            self.fname(file): file.read_text()
-            for file in self.tpl_dir.glob("**/*.mustache")
+            self.fname(file): file.read_text() for file in self.tpl_dir.glob("**/*")
         }
 
     def render_pages(self, loader: Loader, public_path: Path | str):
@@ -172,7 +171,7 @@ class Gen:
         return f"feed-{page}.atom" if page > 1 else "feed.atom"
 
     def fname(self, file: Path) -> str:
-        return str(file.relative_to(self.tpl_dir)).removesuffix(".mustache")
+        return str(file.relative_to(self.tpl_dir))
 
 
 def atom_date(d: datetime) -> str:

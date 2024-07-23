@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Self
 from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
+import itertools
 
 import mistletoe
 from strictyaml import Datetime, Email, Enum, Map, Optional, Str, Url
@@ -72,7 +73,9 @@ class Person:
 
 @dataclass
 class Page:
-    name: str
+    """One page on the site."""
+
+    name: str  # Identifies the page. May include slashes if the source directory has subdirectories
     meta: Mapping[str, Any]
     body: str
 
@@ -161,7 +164,7 @@ def expand_date(d: datetime | date) -> Mapping[str, str]:
 
 
 class Source:
-    """Loads posts from a directory full of Markdown files."""
+    """Loads pages from a directory full of Markdown files."""
 
     meta_file_name = "META.yaml"
 
@@ -230,25 +233,30 @@ class Source:
         kind = self.kind
         if self._pages is None:
             self._pages = []
-            for page_path in sorted(self.pages_dir.glob("**/*.markdown")):
-                name = str(page_path.relative_to(self.pages_dir)).removesuffix(
-                    ".markdown"
-                )
-                page = Page.from_file(name, page_path, tz=self.tz)
+            for suffix in ".markdown", ".md":
+                for page_path in self.pages_dir.rglob(f"*{suffix}"):
+                    name = str(page_path.relative_to(self.pages_dir))
+                    name = name.removesuffix(suffix)
+                    page = Page.from_file(name, page_path, tz=self.tz)
 
-                published = page.meta.get("published")
-                is_draft = published > self.now if published else self.kind == "post"
-                if is_draft:
-                    if self.include_drafts:
-                        page.meta["is_draft"] = True
-                    else:
-                        continue
-                page.meta["kind"] = kind
-                self._pages.append(page)
+                    published = page.meta.get("published")
+                    is_draft = (
+                        published > self.now if published else self.kind == "post"
+                    )
+                    if is_draft:
+                        if self.include_drafts:
+                            page.meta["is_draft"] = True
+                        else:
+                            continue
+                    page.meta["kind"] = kind
+                    self._pages.append(page)
+            self._pages.sort(key=lambda page: page.name)
         return self._pages
 
 
 class Loader:
+    """Loads pages from one or more directories full of Makrdown files."""
+
     def __init__(
         self,
         pages_dirs: list[Path | str],

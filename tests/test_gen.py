@@ -295,6 +295,8 @@ class TestGen(TempDirMixin, unittest.TestCase):
             ["Fabulous", "Drafty"],
         )
 
+    # TODO Can create atom feed despite even if all the meta is omitted.
+
     def test_limits_feed_to_12_entries(self):
         # Given 15 posts …
         for i in range(1, 26):
@@ -360,10 +362,10 @@ class TestGen(TempDirMixin, unittest.TestCase):
         )
 
     def add_post(self, name: str, text: str):
-        (self.posts_dir / f"{name}.markdown").write_text(text)
+        (self.posts_dir / f"{name}.md").write_text(text)
 
     def add_page(self, name: str, text: str):
-        (self.pages_dir / f"{name}.markdown").write_text(text)
+        (self.pages_dir / f"{name}.md").write_text(text)
 
     def add_tpl(self, name: str, text: str):
-        (self.tpl_dir / f"{name}.mustache").write_text(text)
+        (self.tpl_dir / f"{name}").write_text(text)
