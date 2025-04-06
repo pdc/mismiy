@@ -1,6 +1,9 @@
 title: Making the feed document use the default XML namespace
 published: 2024-06-23
 author: Damian Cugley
+tags: 
+- Atom
+- XML
 
 When I wrote about [implementing the Atom format][1], I said that XML
 processors should not care what namespace prefix we use in the XML.
