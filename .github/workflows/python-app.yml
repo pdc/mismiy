@@ -30,7 +30,7 @@ jobs:
         python -m poetry config virtualenvs.in-project false
         python -m poetry config cache-dir .poetry-cache
     - name: Cache for poetry 
-      uses: actions/cache@v4.0.2
+      uses: actions/cache@v4.2.0
       with:
         path: .poetry-cache
         key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
