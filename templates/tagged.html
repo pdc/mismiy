@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang=en>
+    <head>
+        <meta charset=UTF-8>
+        <title>Index</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style>
+            {{> inline.css }}
+
+            h1 {
+                    margin: 0;
+                    font-size: 1em;
+                    font-weight: 500;
+            }
+            ul.main {
+                margin: 0;
+                padding: 0;
+            }
+
+            @media (min-width: 36em) {
+                section.text {
+                    grid-column: 2 / span 2;
+                    margin-top: 2lh;
+                    margin-bottom: 2lh;
+                }
+                h1 {
+                    grid-column: 2 / span 2;
+                }
+                ul.main {
+                    grid-column: 2 / span 2;
+                    display: grid;
+                    grid-template-columns: subgrid;
+
+                    & li {
+                        grid-column: 1 / span 2;
+                        margin-top: 0.75em;
+
+                        display: grid;
+                        grid-template-columns: subgrid;
+                        align-items: baseline;
+
+                        & time {
+                            font-family: var(--swiss);
+                            font-size: 13px;
+                        }
+                        & a {
+                            display: block;
+                        }
+                    }
+                }
+            }
+        </style>
+        {{#links}}
+        <link rel={{rel}} href="{{href}}"{{#type}} type="{{.}}"{{/type}}>
+        {{/links}}
+    </head>
+    <body>
+        {{>header.html}}
+        <h1>Tagged {{#tags}}{{^first}} + {{/first}}<i>{{label}}</i>{{/tags}}</h1>
+        <ul class="main">
+            {{# reverse_chronological }}
+            <li>
+                {{# published }}
+                <time datetime="{{iso_date}}">{{day}} {{month_name}} {{year}}</time>
+                {{/ published }}
+                <a href="{{dotdotslash}}{{href}}">{{title}}</a>
+            </li>
+            {{/ reverse_chronological }}
+        </ul>
+        <aside class="more">
+            {{#has_narrowings}}
+            <p>Narrowings</p>
+            <menu class="tags">
+                {{#narrowings}}
+                <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
+                {{/narrowings}}
+            </menu>
+            {{/has_narrowings}}
+            {{#has_widenings}}
+            <p>Widenings</p>
+            <menu class="tags">
+                {{#widenings}}
+                <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
+                {{/widenings}}
+            </menu>
+            {{/has_widenings}}
+        </aside>
+        <link rel=stylesheet href="{{ dotdotslash }}style.css">
+    </body>
+</html>
+    

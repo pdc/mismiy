@@ -1,5 +1,5 @@
 import shutil
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from importlib.metadata import version
@@ -10,6 +10,7 @@ from urllib.parse import urljoin
 from chevron import render
 
 from .loader import Loader, Page, datetime_naïve
+from .tagging import Tagging
 from .xml import Doc, Elt
 
 
@@ -50,17 +51,29 @@ class Gen:
         elif not public_path.exists():
             public_path.mkdir()
 
+        # Make an index of the pages by tags.
+        tagging = Tagging()
         index_page = None
         for page in loader.pages():
             if page.name == "index":
                 index_page = page
                 continue
+            tagging.add(page)
+
+        # Now we can render the individual pages.
+        for page in loader.pages():
+            if page.name == "index":
+                continue
 
             layout = page.meta["kind"]
-            self._render_1(
-                public_path, f"{page.name}.html", page.context(), f"{layout}.html"
-            )
+            context = page.context()
+            if tags_info := tagging.page_tags(page):
+                context["tags"] = tags_info
+            self._render_1(public_path, f"{page.name}.html", context, f"{layout}.html")
+
+        # Now let’s render the index pages.
         self.render_index(loader, public_path, index_page)
+        self.render_tagged(tagging, public_path)
 
         post_count = len(loader.posts())
         page_count = (post_count + self.page_size - 1) // self.page_size
@@ -72,9 +85,7 @@ class Gen:
     def render_index(self, loader: Loader, public_path: Path, index_page: Page | None):
         links = [Link("alternate", self.feed_href(page=1), type="application/atom+xml")]
         context = {
-            "reverse_chronological": [
-                post.context() for post in reversed(loader.posts())
-            ],
+            "reverse_chronological": [p.reference() for p in reversed(loader.posts())],
             "is_index": True,
             "links": links,
         }
@@ -82,16 +93,55 @@ class Gen:
             context.update(index_page.context())
         self._render_1(public_path, "index.html", context)
 
+    def render_tagged(self, tagging: Tagging, public_path: Path):
+        first = True
+        for tags, pages in tagging.pages_by_tags.items():
+            context = {
+                "tags": sorted(
+                    (tagging.tag_info(tag) for tag in tags),
+                    key=lambda t: (-t.count, t.label),
+                ),
+                "narrowings": tagging.narrowing_tags(tags),
+                "widenings": tagging.widening_tags(tags),
+                "reverse_chronological": [p.reference() for p in reversed(pages)],
+                "dotdotslash": "../",
+            }
+            name = tagging.tags_file(tags)
+            if first:
+                subdir = public_path / name.rpartition("/")[0]
+                if not subdir.exists():
+                    subdir.mkdir(parents=True)
+            self._render_1(public_path, name, context, tpl_name="tagged.html")
+
     def _render_1(
         self,
         public_path: Path,
         name: str,
-        context: Mapping[str, Any],
+        context: dict[str, Any],
         tpl_name: str = None,
     ):
+        more_context = {}
+        # Add has_foo for all lists to facilitate existence checks.
+        for k, v in context.items():
+            if isinstance(v, Sequence) and not isinstance(v, (str, bytes)):
+                more_context[f"has_{k}"] = bool(v)
+
+                if v:
+                    x = v[0]
+                    try:
+                        # We want to set a flag to mark the first item.
+                        if isinstance(x, Mapping):
+                            x["first"] = True
+                        elif isinstance(x, object):
+                            x.first = True
+                    except TypeError as e:
+                        print(e)
+
         out_file = public_path / name
         html = render(
-            self.templates[tpl_name or name], context, partials_dict=self.templates
+            self.templates[tpl_name or name],
+            context | more_context,
+            partials_dict=self.templates,
         )
         out_file.write_text(html, encoding="UTF-8")
 

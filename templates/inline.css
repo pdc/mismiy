@@ -50,7 +50,8 @@ body > header {
 @media (min-width: 36em) {
     body {
         display: grid;
-        grid-template-columns: minmax(max-content, 1fr) 12em minmax(24em, 36em) minmax(1rem, 1fr);
+        grid-template-columns: minmax(max-content, 1fr) 10em minmax(24em, 36em) 1fr;
+        gap: 2em;
     }
     body > header {
         grid-column: 1 / span 4;
@@ -64,9 +65,46 @@ body > header {
     }
 }
 
-.meta {
+@media (min-width: 48em) {
+    body {
+        grid-template-columns: minmax(max-content, 1fr) 10em minmax(24em, 36em) 10em 1fr;
+    }
+}
+
+.meta,.more {
     font-size: 13px;
     line-height: calc(1.5 * 16 / 13);
+
+    & p {
+        margin: 1lh 0 0;
+
+        &:first-child {
+            margin-top: 0;
+        }
+    }
+
+    & menu {
+        margin: 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: 1fr max-content;
+
+        & li {
+            grid-column: 1 / span 2;
+            display: grid;
+            grid-template-columns: subgrid;
+
+            & a {
+                grid-column: 1 / span 2;
+                display: grid;
+                grid-template-columns: subgrid;
+
+                & span {
+                    text-align: right;
+                }
+            }
+        }
+    }
 }
 
 .text {

@@ -1,0 +1,8 @@
+{{#has_tags}}
+<p>Posts on similar topics</p>
+<menu class="tags">
+    {{#tags}}
+    <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
+    {{/tags}}
+</menu>
+{{/has_tags}}

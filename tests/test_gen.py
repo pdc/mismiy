@@ -28,6 +28,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.add_tpl("post.html", "Default post template")
         self.add_tpl("page.html", "Default page template")
         self.add_tpl("index.html", "Index template")
+        self.add_tpl("tagged.html", "Tagged template")
 
         self.pub_dir = self.dir_path / "pub"
         self.loader = Loader([self.posts_dir, self.pages_dir])
@@ -79,6 +80,30 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "<h1>Hello</h1>\n"
             "<p>Hello, World!</p>\n\n"
             "<aside>Footer</aside>\n"
+            "</body>\n",
+        )
+
+    def test_render_page_with_tags(self):
+        self.add_page("about", "title: Hello\ntags:\n- food\n\nHello, World!")
+        self.add_tpl(
+            "page.html",
+            "<h1>{{ title }}</h1>\n"
+            "{{{ body }}}\n"
+            '{{#tags}}<a href="{{href}}">{{label}} ({{count}})</a>{{/tags}}\n'
+            "</body>\n",
+        )
+        self.add_tpl("footer.html", "<aside>Footer</aside>\n")
+
+        gen = Gen(self.tpl_dir)
+        gen.render_pages(self.loader, self.pub_dir)
+
+        html_path = self.pub_dir / "about.html"
+        self.assertTrue(html_path.exists())
+        self.assertEqual(
+            html_path.read_text(),
+            "<h1>Hello</h1>\n"
+            "<p>Hello, World!</p>\n\n"
+            '<a href="tagged/food.html">food (1)</a>\n'
             "</body>\n",
         )
 
@@ -141,6 +166,66 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "<ul>\n"
             '  <li><a href="2024-05-06-hello.html">Greetings</a></li>\n'
             '  <li><a href="2024-05-05-hello.html">Hello</a></li>\n'
+            "</ul>\n",
+        )
+
+    def test_renders_tagged_page(self):
+        self.add_post(
+            "2024-05-05-hello", "title: Hello\ntags:\n- greeting\n\nHello, World!"
+        )
+        self.add_post(
+            "2025-03-30-elephant",
+            "title: Hello Elephants!\ntags:\n- pachyderms\n- greeting\n\nHello, Elephants!",
+        )
+        self.add_post(
+            "2025-03-31-elephant",
+            "title: Elephants\ntags:\n- pachyderms\n\nHere as some elephats.",
+        )
+        self.add_tpl(
+            "tagged.html",
+            "<h1>{{#tags}}{{^first}} + {{/first}}{{label}}{{/tags}}</h1>\n"
+            "<ul>\n"
+            "{{# reverse_chronological }}\n"
+            '  <li><a href="{{ href }}">{{ title }}</a></li>\n'
+            "{{/ reverse_chronological }}\n"
+            "</ul>\n"
+            "{{#has_narrowings}}\n"
+            "<p>Narrowings:</p>\n"
+            "<ul>\n"
+            "{{#narrowings}}"
+            '  <li><a href="{{dotdotslash}}{{href}}">{{label}} ({{count}})</a></li>\n'
+            "{{/narrowings}}\n"
+            "</ul>\n"
+            "{{/has_narrowings}}\n",
+        )
+
+        gen = Gen(self.tpl_dir)
+        gen.render_pages(self.loader, self.pub_dir)
+
+        # Then the greetings page shows just pages tagged greetings.
+        html_path = self.pub_dir / "tagged" / "greeting.html"
+        self.assertTrue(html_path.exists())
+        content = html_path.read_text()
+        self.assertEqual(
+            content,
+            "<h1>greeting</h1>\n"
+            "<ul>\n"
+            '  <li><a href="2025-03-30-elephant.html">Hello Elephants!</a></li>\n'
+            '  <li><a href="2024-05-05-hello.html">Hello</a></li>\n'
+            "</ul>\n"
+            "<p>Narrowings:</p>\n"
+            "<ul>\n"
+            '  <li><a href="../tagged/greeting+pachyderms.html">pachyderms (1)</a></li>\n'
+            "</ul>\n",
+        )
+        # And the greeting+pachyderms page shows just the page with both tags.
+        html_path = self.pub_dir / "tagged" / "greeting+pachyderms.html"
+        self.assertTrue(html_path.exists())
+        self.assertEqual(
+            html_path.read_text(),
+            "<h1>greeting + pachyderms</h1>\n"
+            "<ul>\n"
+            '  <li><a href="2025-03-30-elephant.html">Hello Elephants!</a></li>\n'
             "</ul>\n",
         )
 

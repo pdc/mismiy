@@ -3,6 +3,7 @@ from datetime import datetime
 from uuid import UUID, uuid5
 
 from mismiy.loader import Page
+from mismiy.tagging import Tagging, TagInfo
 
 
 class TestPage(unittest.TestCase):
@@ -14,9 +15,15 @@ class TestPage(unittest.TestCase):
         self.assertEqual(result["body"], "<p>Hello, <em>world</em>!</p>\n")
 
     def test_includes_meta_in_context(self):
-        post = Page("2024-05-05--hello", {"title": "Hello"}, "Hello, *world*!")
+        page = Page(
+            "2024-05-05--hello",
+            {"title": "Hello"},
+            "Hello, *world*!",
+        )
+        tagging = Tagging()
+        tagging.add(page)
 
-        result = post.context()
+        result = page.context()
 
         # Then the context includes at least the following items:
         self.assertEqual(
@@ -28,6 +35,23 @@ class TestPage(unittest.TestCase):
                 "dotdotslash": "",
                 "title": "Hello",
             },
+        )
+
+    def test_adds_tag_info_to_context_if_tagged(self):
+        page = Page(
+            "2024-05-05--hello",
+            {"title": "Hello", "tags": ["Some tag"]},
+            "Hello, *world*!",
+        )
+        tagging = Tagging()
+        tagging.add(page)
+
+        result = page.context(tagging)
+
+        # Then the context includes at least the following items:
+        self.assertEqual(
+            result,
+            result | {"tags": [TagInfo("Some tag", "tagged/sometag.html", 1)]},
         )
 
     def test_converts_datetime_to_dict(self):

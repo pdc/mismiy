@@ -60,7 +60,7 @@
                 <time datetime="{{iso_datetime}}">{{day}} {{month_name}} {{year}}</time></span>
                 {{/ published }}
                 {{/updated}}
-                {{# is_draft }}<b class="draft">[DRAFT]</b>{{/ is_draft }}
+                {{>tags.html}}
             </footer>
         </article>
         <link rel=stylesheet href="{{ dotdotslash }}style.css">

@@ -7,12 +7,12 @@ from pathlib import Path
 from typing import Any, Self
 from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
-import itertools
 
 import mistletoe
-from strictyaml import Datetime, Email, Enum, Map, Optional, Str, Url
+from strictyaml import Datetime, Email, Enum, Map, Optional, Str, UniqueSeq, Url
 from strictyaml import load as yaml_load
 
+from .tagging import Tagging
 from .xml import Elt
 
 NAMESPACE_BLOG = UUID("30c72114-7908-4a69-84ff-7ed69090220d")
@@ -34,6 +34,7 @@ post_schema = Map(
         Optional("id"): Str(),
         Optional("published"): Datetime(),
         Optional("updated"): Datetime(),
+        Optional("tags"): UniqueSeq(Str()),
     }
 )
 meta_schema = Map(
@@ -87,7 +88,7 @@ class Page:
     def dotdotslash(self):
         return "".join(["../"] * (len(self.name.split("/")) - 1))
 
-    def context(self):
+    def context(self, tagging: Tagging = None):
         result = {
             k: expand_date(d) if isinstance(d, (datetime, date)) else d
             for k, d in self.meta.items()
@@ -100,6 +101,17 @@ class Page:
                 "body": self.body_html(),
             }
         )
+        if tagging and (tag_infos := tagging.page_tags(self)):
+            result["tags"] = tag_infos
+        return result
+
+    def reference(self, tagging: Tagging = None):
+        """Just enough context for the link to this page."""
+        result = {
+            k: expand_date(d) if isinstance(d, (datetime, date)) else d
+            for k, d in self.meta.items()
+        }
+        result.update({"name": self.name, "href": self.href})
         return result
 
     def body_html(self):
