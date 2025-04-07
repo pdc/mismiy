@@ -1,7 +1,7 @@
 title: Making the feed document use the default XML namespace
 published: 2024-06-23
 author: Damian Cugley
-tags: 
+tags:
 - Atom
 - XML
 

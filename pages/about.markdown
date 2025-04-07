@@ -12,7 +12,7 @@ A ‘static’ site means that all the pages people can view are already
 rendered in advance, rather than on-demand using information from some
 database backend. This means the web server can be exceptionally
 simple, which is good for security, and cheap to host. The trade-off is
-they treat all vistors equally: they’re good for a public blog, less so
+they treat all visitors equally: they’re good for a public blog, less so
 for premium content or secret notes.
 
 The word ‘simple’ is a bit slippery, but the intention is get a lot of

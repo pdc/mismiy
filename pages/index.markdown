@@ -1,4 +1,4 @@
 title: Mismiy
 
-Mismiy is (yet anither) simple static-site generator.
+Mismiy is (yet another) simple static-site generator.
 
