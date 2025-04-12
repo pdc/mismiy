@@ -6,49 +6,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>
             {{> inline.css }}
-
-            h1 {
-                    margin: 0;
-                    font-size: 1em;
-                    font-weight: 500;
-            }
-            ul.main {
-                margin: 0;
-                padding: 0;
-            }
-
-            @media (min-width: 36em) {
-                section.text {
-                    grid-column: 2 / span 2;
-                    margin-top: 2lh;
-                    margin-bottom: 2lh;
-                }
-                h1 {
-                    grid-column: 2 / span 2;
-                }
-                ul.main {
-                    grid-column: 2 / span 2;
-                    display: grid;
-                    grid-template-columns: subgrid;
-
-                    & li {
-                        grid-column: 1 / span 2;
-                        margin-top: 0.75em;
-
-                        display: grid;
-                        grid-template-columns: subgrid;
-                        align-items: baseline;
-
-                        & time {
-                            font-family: var(--swiss);
-                            font-size: 13px;
-                        }
-                        & a {
-                            display: block;
-                        }
-                    }
-                }
-            }
+            {{> index.css }}
         </style>
         {{#links}}
         <link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>
@@ -61,16 +19,15 @@
         </section>
         <h1>Build log (blog)</h1>
         <ul class="main">
-            {{# reverse_chronological }}
+            {{#reverse_chronological}}
             <li>
-                {{# published }}
+                {{#published}}
                 <time datetime="{{iso_date}}">{{day}} {{month_name}} {{year}}</time>
                 {{/ published }}
                 <a href="{{ href }}">{{ title }}</a>
             </li>
-            {{/ reverse_chronological }}
+            {{/reverse_chronological}}
         </ul>
         <link rel=stylesheet href="{{ dotdotslash }}style.css">
     </body>
 </html>
-    

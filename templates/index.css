@@ -1,0 +1,61 @@
+h1 {
+    margin: 0;
+    font-size: 1.25em;
+    font-weight: 500;
+}
+ul.main {
+    margin: 0;
+    padding: 0;
+
+    time {
+        font-family: var(--swiss);
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 36em) {
+    section.text {
+        margin-top: 2em;
+    }
+    h1 {
+        margin: 1lh 0 0.5lh;
+    }
+    ul.main li {
+        margin: var(--vsmall) 0;
+        display: flex;
+        flex-flow: column-reverse; /* Put date under title */
+
+        time {
+            padding-top: calc(var(--vsmall) / 2);
+        }
+
+    }
+}
+
+@media (min-width: 36em) {
+    section.text {
+        grid-column: 2 / span 2;
+        margin-top: 2lh;
+        margin-bottom: 2lh;
+    }
+    h1 {
+        grid-column: 2 / span 2;
+    }
+    ul.main {
+        grid-column: 2 / span 2;
+        display: grid;
+        grid-template-columns: subgrid;
+
+        & li {
+            grid-column: 1 / span 2;
+            margin-top: 0.75em;
+
+            display: grid;
+            grid-template-columns: subgrid;
+            align-items: baseline;
+        }
+        & a {
+            display: block;
+        }
+    }
+}
