@@ -363,6 +363,9 @@ class TestGen(TempDirMixin, unittest.TestCase):
         # Then it is an XML doc with root `atom:feed`.
         self.assertEqual(result.etype, "atom:feed")
         self.assertEqual(
+            result.attrs["xml:base"], "https://mismiy.example/test/feed.atom"
+        )
+        self.assertEqual(
             result.find("atom:link", {"rel": "self"}).attrs["href"],
             "https://mismiy.example/test/feed.atom",
         )
@@ -380,7 +383,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
             ["Fabulous", "Drafty"],
         )
 
-    # TODO Can create atom feed despite even if all the meta is omitted.
+    # TODO Can create atom feed even if all the meta is omitted.
 
     def test_limits_feed_to_12_entries(self):
         # Given 15 posts …
@@ -443,7 +446,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.assertTrue(feed_file.exists())
         self.assertRegex(
             feed_file.read_text(),
-            r'.*<feed xmlns="http://www.w3.org/2005/Atom">.*',
+            r'.*<feed xml:base="https://mismiy.example/test/feed.atom" xmlns="http://www.w3.org/2005/Atom">.*',
         )
 
     def add_post(self, name: str, text: str):

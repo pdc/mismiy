@@ -140,7 +140,7 @@ class TestTagging(unittest.TestCase):
     def page_with_tags(self, title: str, tags: list[str]) -> Page:
         self.page_count += 1
         return Page(
-            f"2025-03-{self.page_count:02d}-{title.lower().replace(' ','-')}",
+            f"2025-03-{self.page_count:02d}-{title.lower().replace(' ', '-')}",
             {"title": title, "tags": tags},
             f"All about {title}!",
         )

@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "mismiy"
 version = "0.1.0"
-description = ""
+description = "Yet another static site generator."
 authors = ["Damian Cugley <pdc@alleged.org.uk>"]
 readme = "README.md"
 

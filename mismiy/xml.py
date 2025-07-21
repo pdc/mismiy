@@ -113,8 +113,8 @@ class Doc(Elt):
     """A simple XML generator for XML.
 
     Disclaimer: this is not a general-purpose XML representation.
-    It does *not* support mixed content (where text and elements)
-    are mixed up together, just a tree of elements with only the leaves
+    It does *not* support mixed content (where text and elements
+    are mixed up together), just a tree of elements with only the leaves
     containing text. This is the subset of XML used by Atom,
     site maps, and so on, if we ignore XHTML inclusions for now.
 
@@ -124,7 +124,7 @@ class Doc(Elt):
     without worrying abut whether they are or not.
 
     As a further affectation the namespace of the root element will
-    be made the default namespace at the root, andthe qnames of
+    be made the default namespace at the root, and the qnames of
     elements and attributes adjusted accordingly. This makes no
     difference to the meaning of an XML document with namespaces,
     but might make a difference to parsers hacked together out of

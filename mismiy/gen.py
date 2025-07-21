@@ -1,5 +1,5 @@
 import shutil
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from importlib.metadata import version
@@ -160,9 +160,11 @@ class Gen:
         doc.element("atom:id", {}, loader.id)
         doc.element("atom:title", {}, loader.title)
         if url := loader.url:
+            self_href = urljoin(url, self.feed_href(page))
+            doc.attrs["xml:base"] = self_href
             doc.element(
                 "atom:link",
-                {"rel": "self", "href": urljoin(url, self.feed_href(page))},
+                {"rel": "self", "href": self_href},
             )
             if page == 1:
                 doc.element("atom:link", {"rel": "alternate", "href": url})
