@@ -88,7 +88,7 @@ class Page:
     def dotdotslash(self):
         return "".join(["../"] * (len(self.name.split("/")) - 1))
 
-    def context(self, tagging: Tagging = None):
+    def context(self, tagging: Tagging = None) -> dict:
         result = {
             k: expand_date(d) if isinstance(d, (datetime, date)) else d
             for k, d in self.meta.items()
@@ -312,7 +312,7 @@ class Loader:
         for source in self.sources:
             source.flush()
 
-    def pages(self):
+    def pages(self) -> list[Page]:
         return [p for source in self.sources for p in source.pages()]
 
     def posts(self):
