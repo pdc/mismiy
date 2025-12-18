@@ -1,7 +1,7 @@
 import locale
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime, timezone, tzinfo
 from pathlib import Path
 from typing import Any, Self
@@ -12,6 +12,7 @@ import mistletoe
 from strictyaml import Datetime, Email, Enum, Map, Optional, Str, UniqueSeq, Url
 from strictyaml import load as yaml_load
 
+from .links import Link, url_relative_to
 from .tagging import Tagging
 from .xml import Elt
 
@@ -79,6 +80,7 @@ class Page:
     name: str  # Identifies the page. May include slashes if the source directory has subdirectories
     meta: Mapping[str, Any]
     body: str
+    links: list[Link] = field(default_factory=list)
 
     @property
     def href(self):
@@ -93,12 +95,17 @@ class Page:
             k: expand_date(d) if isinstance(d, (datetime, date)) else d
             for k, d in self.meta.items()
         }
+        links_by_rel = {}
+        for link in self.links:
+            links_by_rel.setdefault(link.rel, []).append(link)
         result.update(
             {
                 "name": self.name,
                 "href": self.href,
                 "dotdotslash": self.dotdotslash,
                 "body": self.body_html(),
+                "links": self.links,
+                "links_by_rel": links_by_rel,
             }
         )
         if tagging and (tag_infos := tagging.page_tags(self)):
@@ -154,7 +161,7 @@ class Page:
                 meta[k] = v.replace(tzinfo=tz)
         if obj := meta.get("author"):
             meta["author"] = Person.new(obj)
-        return cls(name, meta, parts[1])
+        return cls(name, meta, body=parts[1])
 
     @classmethod
     def from_file(cls, name: str, file: Path, tz: tzinfo) -> "Page":
@@ -263,6 +270,27 @@ class Source:
                     page.meta["kind"] = kind
                     self._pages.append(page)
             self._pages.sort(key=lambda page: page.name)
+
+            # Add links
+            prev = None
+            for page in self._pages:
+                if prev:
+                    page.links.append(
+                        Link(
+                            "prev",
+                            url_relative_to(prev.href, page.href),
+                            prev.meta["title"],
+                        )
+                    )
+                    prev.links.append(
+                        Link(
+                            "next",
+                            url_relative_to(page.href, prev.href),
+                            page.meta["title"],
+                        )
+                    )
+                prev = page
+
         return self._pages
 
 

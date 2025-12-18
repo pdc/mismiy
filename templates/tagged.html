@@ -28,22 +28,21 @@
         <aside class="more">
             {{#has_narrowings}}
             <p>Narrowings</p>
-            <menu class="tags">
+            <nav class="tags">
                 {{#narrowings}}
                 <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
                 {{/narrowings}}
-            </menu>
+            </nav>
             {{/has_narrowings}}
             {{#has_widenings}}
             <p>Widenings</p>
-            <menu class="tags">
+            <nav class="tags">
                 {{#widenings}}
                 <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
                 {{/widenings}}
-            </menu>
+            </nav>
             {{/has_widenings}}
         </aside>
         <link rel=stylesheet href="{{ dotdotslash }}style.css">
     </body>
 </html>
-

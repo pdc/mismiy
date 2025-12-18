@@ -2,6 +2,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
+from mismiy.links import Link
 from mismiy.loader import Loader, Person, Source
 
 from .mixins import TempDirMixin
@@ -138,6 +139,52 @@ class TestSource(TempDirMixin, unittest.TestCase):
         self.assertEqual(
             result[0].meta.get("author"),
             Person("Alice de Winter", "https://dewinter.example/alice"),
+        )
+
+    # Links between pages:
+
+    def test_adds_prev_next_links(self):
+        (self.dir_path / "2025-12-07-charley.md").write_text(
+            "title: Char\n\nHello, Charley."
+        )
+        (self.dir_path / "2025-11-07-bravo.md").write_text(
+            "title: Bravo\n\nHello, Bravo."
+        )
+        (self.dir_path / "2025-10-07-alpha.md").write_text(
+            "title: Alpha\n\nHello, Alpha."
+        )
+        source = Source(self.dir_path)
+
+        result = source.pages()
+
+        self.assertIn(Link("next", "2025-11-07-bravo.html", "Bravo"), result[0].links)
+        self.assertIn(Link("prev", "2025-10-07-alpha.html", "Alpha"), result[1].links)
+        self.assertIn(Link("next", "2025-12-07-charley.html", "Char"), result[1].links)
+        self.assertIn(Link("prev", "2025-11-07-bravo.html", "Bravo"), result[2].links)
+
+    def test_adds_prev_next_links_relative_to_page(self):
+        for d in "2025-12", "2025-11":
+            (self.dir_path / d).mkdir()
+        (self.dir_path / "2025-12/07-charley.md").write_text(
+            "title: Char\n\nHello, Charley."
+        )
+        (self.dir_path / "2025-11/17-bravo.md").write_text(
+            "title: Bravo\n\nHello, Bravo."
+        )
+        (self.dir_path / "2025-11/07-alpha.md").write_text(
+            "title: Alpha\n\nHello, Alpha."
+        )
+        source = Source(self.dir_path)
+
+        result = source.pages()
+
+        self.assertIn(Link("next", "17-bravo.html", "Bravo"), result[0].links)
+        self.assertIn(Link("prev", "07-alpha.html", "Alpha"), result[1].links)
+        self.assertIn(
+            Link("next", "../2025-12/07-charley.html", "Char"), result[1].links
+        )
+        self.assertIn(
+            Link("prev", "../2025-11/17-bravo.html", "Bravo"), result[2].links
         )
 
     # Kinds of source (page or post):

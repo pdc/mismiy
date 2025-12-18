@@ -1,6 +1,5 @@
 import shutil
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
 from datetime import datetime
 from importlib.metadata import version
 from pathlib import Path
@@ -9,17 +8,10 @@ from urllib.parse import urljoin
 
 from chevron import render
 
+from .links import Link
 from .loader import Loader, Page, datetime_naïve
 from .tagging import Tagging
 from .xml import Doc, Elt
-
-
-@dataclass
-class Link:
-    rel: str
-    href: str
-    title: str | None = None
-    type: str | None = None
 
 
 class Gen:
@@ -83,14 +75,15 @@ class Gen:
                 self._atom_feed(loader, page=(i + 1)).write_to(f)
 
     def render_index(self, loader: Loader, public_path: Path, index_page: Page | None):
-        links = [Link("alternate", self.feed_href(page=1), type="application/atom+xml")]
         context = {
             "reverse_chronological": [p.reference() for p in reversed(loader.posts())],
             "is_index": True,
-            "links": links,
         }
         if index_page:
             context.update(index_page.context())
+        context.setdefault("links", []).append(
+            Link("alternate", self.feed_href(page=1), type="application/atom+xml")
+        )
         self._render_1(public_path, "index.html", context)
 
     def render_tagged(self, tagging: Tagging, public_path: Path):

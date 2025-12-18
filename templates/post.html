@@ -48,7 +48,9 @@
                     }
                 }
             }
-        </style>
+        </style>{{#links}}
+        <link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>
+        {{/links}}
     </head>
     <body>
         {{> header.html }}
@@ -58,16 +60,19 @@
                 {{#author}}
                 {{^uri}}<span class="h-card">{{name}}</span>{{/uri}}
                 {{#uri}}<a href="{{uri}}">{{name}}</a>{{/uri}}
-                {{/author}}
-                {{# published }}
+                {{/author}}{{# published }}
                 <time datetime="{{iso_datetime}}">{{day}} {{month_name}} {{year}}</time>
                 {{/ published }}
             </div>
             <div class="text">
-            {{{ body }}}
-            </div>
-            <div class="more">
-                {{# is_draft }}<b class="draft">[DRAFT]</b>{{/ is_draft }}
+            {{{ body }}}</div>
+            <div class="more">{{#is_draft}}
+                <b class="draft">[DRAFT]</b>{{/is_draft}}{{#links_by_rel}}
+                <nav class="links">{{#prev}}
+                    <li>Previous post: <a href={{href}}>{{title}}</a></li>{{/prev}}
+                    {{#next}}
+                    <li>Next post: <a href={{href}}>{{title}}</a></li>{{/next}}
+                </nav>{{/links_by_rel}}
                 {{>tags.html}}
             </div>
         </article>

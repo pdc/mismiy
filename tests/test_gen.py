@@ -23,6 +23,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.pages_dir = self.dir_path / "pages"
         self.pages_dir.mkdir()
 
+        # We use contrived templates to show data is included in the context
         self.tpl_dir = self.dir_path / "tpl"
         self.tpl_dir.mkdir()
         self.add_tpl("post.html", "Default post template")
@@ -34,12 +35,16 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.loader = Loader([self.posts_dir, self.pages_dir])
 
     def test_render_post(self):
+        self.add_post("2024-05-04-earlier", 'title: "Soon: Hello"\n\nComing soon!')
         self.add_post("2024-05-05-hello", "title: Hello\n\nHello, World!")
+        self.add_post("2025-12-17-later", "title: Later\n\nBeen a while!")
         self.add_tpl(
             "post.html",
             "<!DOCTYPE html><title>{{ title }}</title><body>\n"
             "<h1>{{ title }}</h1>\n"
             "{{{ body }}}\n"
+            '{{#links_by_rel}}{{#prev}}<a href="{{href}}">{{title}}</a>{{/prev}}{{/links_by_rel}}\n'
+            '{{#links_by_rel.next}}Next: <a href="{{href}}">{{title}}</a>{{/links_by_rel.next}}\n'
             "{{> footer.html }}</body>\n",
         )
         self.add_tpl("footer.html", "<aside>Footer</aside>\n")
@@ -54,6 +59,8 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "<!DOCTYPE html><title>Hello</title><body>\n"
             "<h1>Hello</h1>\n"
             "<p>Hello, World!</p>\n\n"
+            '<a href="2024-05-04-earlier.html">Soon: Hello</a>\n'
+            'Next: <a href="2025-12-17-later.html">Later</a>\n'
             "<aside>Footer</aside>\n"
             "</body>\n",
         )
@@ -140,14 +147,15 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.add_post("2024-05-06-hello", "title: Greetings\n\nGreetings, World!")
         self.add_tpl(
             "index.html",
-            '{{#links}}<link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>\n{{/links}}\n'
-            "<article>\n"
-            "{{{ body }}}</article>\n"
-            "<ul>\n"
-            "  {{# reverse_chronological }}\n"
-            '  <li><a href="{{ href }}">{{ title }}</a></li>\n'
-            "  {{/ reverse_chronological }}\n"
-            "</ul>\n",
+            """{{#links}}<link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>\n{{/links}}
+<article>
+{{{ body }}}</article>
+<ul>
+  {{# reverse_chronological }}
+  <li><a href="{{ href }}">{{ title }}</a></li>
+ {{/ reverse_chronological }}
+</ul>
+""",
         )
         self.add_page("index", "title: Welcome\n\nHello, world!")
 
@@ -159,14 +167,15 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.assertTrue(html_path.exists())
         self.assertEqual(
             html_path.read_text(),
-            '<link rel=alternate href="feed.atom" type="application/atom+xml">\n'
-            "<article>\n"
-            "<p>Hello, world!</p>\n"
-            "</article>\n"
-            "<ul>\n"
-            '  <li><a href="2024-05-06-hello.html">Greetings</a></li>\n'
-            '  <li><a href="2024-05-05-hello.html">Hello</a></li>\n'
-            "</ul>\n",
+            """<link rel=alternate href="feed.atom" type="application/atom+xml">
+<article>
+<p>Hello, world!</p>
+</article>
+<ul>
+  <li><a href="2024-05-06-hello.html">Greetings</a></li>
+  <li><a href="2024-05-05-hello.html">Hello</a></li>
+</ul>
+""",
         )
 
     def test_renders_tagged_page(self):

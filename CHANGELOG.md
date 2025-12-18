@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased changes]
+
+### Added
+
+- Page context has `links_by_rel` to allow including specific links in page templates. [#6]
+- Posts have `next` and `prev` links. [#6]
+
 ## 0.1.0 (2025-07-27)
 
 ### Added
