@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from typing import Generic, TypeVar
 
 
 @dataclass
@@ -7,6 +8,19 @@ class Link:
     href: str
     title: str | None = None
     type: str | None = None
+
+
+TLink = TypeVar("TLink")
+
+
+def munged(link: Generic[TLink], *, omit_dot_html=False) -> TLink:
+    """Munge the href field of the input.
+
+    If the href field does not need munging, the original object is returned.
+    """
+    if omit_dot_html and link.href.endswith(".html"):
+        return replace(link, href=link.href[:-5])
+    return link
 
 
 def url_relative_to(target: str, base: str) -> str:

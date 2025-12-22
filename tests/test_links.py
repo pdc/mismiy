@@ -1,6 +1,6 @@
 import unittest
 
-from mismiy.links import url_relative_to
+from mismiy.links import Link, munged, url_relative_to
 
 
 class TestUrlRelativeTo(unittest.TestCase):
@@ -35,3 +35,33 @@ class TestUrlRelativeTo(unittest.TestCase):
             url_relative_to(target, base),
             "../../../alpha/bravo/charley.html",
         )
+
+
+class TestMungeLink(unittest.TestCase):
+
+    def test_munged_without_parameters_returns_self(self):
+        input = Link("first", "first.html", "First")
+
+        # When munged with default parameters …
+        result = munged(input, omit_dot_html=False)
+
+        # Then it returns itself unmodified.
+        self.assertIs(result, input)
+
+    def test_munged_with_omit_html_omits_html(self):
+        input = Link("first", "first-page.html", "First")
+
+        # When munged with default parameters …
+        result = munged(input, omit_dot_html=True)
+
+        # Then it returns a link with shorter `href`.
+        self.assertEqual(result, Link("first", "first-page", "First"))
+
+    def test_munged_does_not_strip_other_suffixes(self):
+        input = Link("feed", "feed.atom", "Atom feed")
+
+        # When munged with default parameters …
+        result = munged(input, omit_dot_html=True)
+
+        # Then it returns itself unmodified.
+        self.assertIs(result, input)

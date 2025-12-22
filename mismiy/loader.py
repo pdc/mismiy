@@ -12,7 +12,7 @@ import mistletoe
 from strictyaml import Datetime, Email, Enum, Map, Optional, Str, UniqueSeq, Url
 from strictyaml import load as yaml_load
 
-from .links import Link, url_relative_to
+from .links import Link, munged, url_relative_to
 from .tagging import Tagging
 from .xml import Elt
 
@@ -90,21 +90,24 @@ class Page:
     def dotdotslash(self):
         return "".join(["../"] * (len(self.name.split("/")) - 1))
 
-    def context(self, tagging: Tagging = None) -> dict:
+    def context(self, tagging: Tagging = None, *, omit_dot_html=False) -> dict:
         result = {
             k: expand_date(d) if isinstance(d, (datetime, date)) else d
             for k, d in self.meta.items()
         }
         links_by_rel = {}
+        links = []
         for link in self.links:
-            links_by_rel.setdefault(link.rel, []).append(link)
+            munged_link = munged(link, omit_dot_html=omit_dot_html)
+            links_by_rel.setdefault(link.rel, []).append(munged_link)
+            links.append(munged_link)
         result.update(
             {
                 "name": self.name,
                 "href": self.href,
                 "dotdotslash": self.dotdotslash,
                 "body": self.body_html(),
-                "links": self.links,
+                "links": links,
                 "links_by_rel": links_by_rel,
             }
         )
@@ -112,13 +115,14 @@ class Page:
             result["tags"] = tag_infos
         return result
 
-    def reference(self, tagging: Tagging = None):
+    def reference(self, tagging: Tagging = None, *, omit_dot_html=False):
         """Just enough context for the link to this page."""
         result = {
             k: expand_date(d) if isinstance(d, (datetime, date)) else d
             for k, d in self.meta.items()
         }
-        result.update({"name": self.name, "href": self.href})
+        href = self.href.removesuffix(".html") if omit_dot_html else self.href
+        result.update({"name": self.name, "href": href})
         return result
 
     def body_html(self):

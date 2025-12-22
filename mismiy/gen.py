@@ -8,7 +8,7 @@ from urllib.parse import urljoin
 
 from chevron import render
 
-from .links import Link
+from .links import Link, munged
 from .loader import Loader, Page, datetime_naïve
 from .tagging import Tagging
 from .xml import Doc, Elt
@@ -17,7 +17,16 @@ from .xml import Doc, Elt
 class Gen:
     page_size = 12
 
-    def __init__(self, tpl_dir: Path | str, static_dir: Path | str = None):
+    tpl_dir: Path
+    static_dir: Path | None
+    omit_dot_html: bool
+
+    def __init__(
+        self,
+        tpl_dir: Path | str,
+        static_dir: Path | str = None,
+        omit_dot_html: bool = False,
+    ):
         self.tpl_dir = Path(tpl_dir)
         self.flush_tpls()
         if static_dir:
@@ -28,6 +37,7 @@ class Gen:
                 self.static_dir = static_dir
             else:
                 self.static_dir = None
+        self.omit_dot_html = omit_dot_html
 
     def flush_tpls(self):
         """Discard cached templates and reload."""
@@ -58,9 +68,12 @@ class Gen:
                 continue
 
             layout = page.meta["kind"]
-            context = page.context()
-            if tags_info := tagging.page_tags(page):
-                context["tags"] = tags_info
+            context = page.context(omit_dot_html=self.omit_dot_html)
+            if tags_infos := tagging.page_tags(page):
+                context["tags"] = [
+                    munged(info, omit_dot_html=self.omit_dot_html)
+                    for info in tags_infos
+                ]
             self._render_1(public_path, f"{page.name}.html", context, f"{layout}.html")
 
         # Now let’s render the index pages.
@@ -76,7 +89,10 @@ class Gen:
 
     def render_index(self, loader: Loader, public_path: Path, index_page: Page | None):
         context = {
-            "reverse_chronological": [p.reference() for p in reversed(loader.posts())],
+            "reverse_chronological": [
+                p.reference(omit_dot_html=self.omit_dot_html)
+                for p in reversed(loader.posts())
+            ],
             "is_index": True,
         }
         if index_page:
@@ -91,12 +107,24 @@ class Gen:
         for tags, pages in tagging.pages_by_tags.items():
             context = {
                 "tags": sorted(
-                    (tagging.tag_info(tag) for tag in tags),
+                    (
+                        munged(tagging.tag_info(tag), omit_dot_html=self.omit_dot_html)
+                        for tag in tags
+                    ),
                     key=lambda t: (-t.count, t.label),
                 ),
-                "narrowings": tagging.narrowing_tags(tags),
-                "widenings": tagging.widening_tags(tags),
-                "reverse_chronological": [p.reference() for p in reversed(pages)],
+                "narrowings": [
+                    munged(info, omit_dot_html=self.omit_dot_html)
+                    for info in tagging.narrowing_tags(tags)
+                ],
+                "widenings": [
+                    munged(info, omit_dot_html=self.omit_dot_html)
+                    for info in tagging.widening_tags(tags)
+                ],
+                "reverse_chronological": [
+                    p.reference(omit_dot_html=self.omit_dot_html)
+                    for p in reversed(pages)
+                ],
                 "dotdotslash": "../",
             }
             name = tagging.tags_file(tags)

@@ -140,6 +140,11 @@ def main(argv: list[str] = None):
         "Must be a locale specifier like `en_GB.UTF-8`.",
     )
     arg_parser.add_argument(
+        "--omit-dot-html",
+        action="store_true",
+        help="Omit the .html suffix from href attributes",
+    )
+    arg_parser.add_argument(
         "pages_dirs",
         metavar="PATH",
         nargs="*",
@@ -156,7 +161,11 @@ def main(argv: list[str] = None):
         [Path(x) for x in args.pages_dirs], include_drafts=include_drafts, now=now
     )
 
-    gen = Gen(Path(args.templates_dir), Path(args.static_dir))
+    gen = Gen(
+        Path(args.templates_dir),
+        Path(args.static_dir),
+        omit_dot_html=args.omit_dot_html,
+    )
     gen.render_pages(loader, Path(args.out_dir))
 
     if args.watch:

@@ -179,11 +179,13 @@ Key | Value
 `author` | An object with fields `name`, `uri`, and `email`; the latter two may be null
 `body` | The text of the page, converted to HTML fragments
 `dotdotslash` | Relative URL to the root of the blog: a sequence zero or more repetitions of `../` that can be prepended to a relative URL
-`href` | URL of the page, relative to the base URL of the blog. Same as name plus `.html`
+`href` | URL of the page, relative to the base URL of the blog
 `name` | Name of the page, formed from the file name without `.md` or `.markdown` suffix
 `published` | A date object, as described below
 `tags` | If this page has tags, then a list of tag objects with `label`, `href`, and `count` fields
 `updated` | A date object, as described below, or null
+`links` | List of objects with `rel`, `href`, optional `title` and optional `type`
+`links_by_rel` | The same link objects, but indexed by their `rel` value
 
 Date objects are a halfway house to proper localization of dates. They contain
 the following fields:
@@ -205,9 +207,10 @@ Key | Value
 ---|---
 `is_index` | Always true
 `links` | List of objects with `rel`, `href`, optional `title` and optional `type`
+`links_by_rel` | The same link objects, but indexed by their `rel` value
 `reverse_chronological` | List of objects with the same fields as pages except without the `body` and `tags`
 
-The index page is the root of the site, so `dotdotslash` is always undefined.
+The index page is the root of the site, so `dotdotslash` is always empty.
 
 Pages for combinations of tags are like index pages
 
@@ -215,6 +218,7 @@ Key | Value
 ---|---
 `dotdotslash` | Relative URL to the root of the blog: a sequence zero or more repetitions of `../` that can be prepended to a relative URL
 `links` | List of objects with `rel`, `href`, optional `title` and optional `type`
+`links_by_rel` | The same link objects, but indexed by their `rel` value
 `reverse_chronological` | List of objects with the same fields as pages except without the `body` and `tags`
 `tags` | List of tag objects
 `widenings` | List of tag objects with few tags (and therefore linking to more pages)
@@ -227,23 +231,23 @@ reading pages from `posts`, generating HTML with templates in `templates`,
 and writing files in a directory called `pub`. Posts whose published date is in
 the future are omitted.
 
-This behaviour can be adjusted with
-options:
+This behaviour can be adjusted with options:
 
 Option | Effect
 --- | ---
-  `--templates-dir`, `-t` _path_ | Directory containing mustache templates. Default is `templates`.
- `--static-dir`, `-s` _path_ | Root of static files. Default is `static`.
- `--out-dir`, `-o` _path_ | Root of generated HTML tree. Default is `pub`.
- `--watch`, `-w` | Watch files & rerun when they change. Implies `--draft`.
- `--drafts`, `-d` | Include unpublished articles.
- `--as-of` _date_ | Change the cut-off date for unpublished articles.
- `--locale` _locale_ | Override the default locale. Must be a locale specifier like `en_GB.UTF-8`.
+`--as-of` _date_ | Change the cut-off date for unpublished articles.
+`--drafts`, `-d` | Include unpublished articles.
+`--locale` _locale_ | Override the default locale. Must be a locale specifier like `en_GB.UTF-8`.
+`--omit-dot-html` | If set, strip the `.html` from internal hrefs. You need a server that adds the `.html` suffix.
+`--out-dir`, `-o` _path_ | Root of generated HTML tree. Default is `pub`.
+`--static-dir`, `-s` _path_ | Root of static files. Default is `static`.
+`--templates-dir`, `-t` _path_ | Directory containing mustache templates. Default is `templates`.
+`--watch`, `-w` | Watch files & rerun when they change. Implies `--draft`.
 
 Directories of pages to include in addition to `posts` can be specified on the command line.
 
 A convenient way to work on a post is to have one terminal window running `mismiy -w`,
-and another running `python -mhttp.server`. Then when you have saved edits to your
+and another running `python -mhttp.server` from the `pub` directory. Then when you have saved edits to your
 posts or templates, refresh the web browser window to see the updated HTML.
 
 [Markdown]: https://commonmark.org

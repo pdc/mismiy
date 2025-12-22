@@ -142,6 +142,56 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "</ul>\n",
         )
 
+    def test_renders_index_page_sans_dot_html(self):
+        # Given the same setup as the previous test …
+        self.add_post("2024-05-05-hello", "title: Hello\n\nHello, World!")
+        self.add_post("2024-05-06-hello", "title: Greetings\n\nGreetings, World!")
+        self.add_tpl(
+            "index.html",
+            '{{#links}}<link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>\n{{/links}}\n'
+            "<ul>\n"
+            "  {{# reverse_chronological }}\n"
+            '  <li><a href="{{ href }}">{{ title }}</a></li>\n'
+            "  {{/ reverse_chronological }}\n"
+            "</ul>\n",
+        )
+        # And a template for posts …
+        self.add_tpl(
+            "post.html",
+            '{{#links}}<link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>\n{{/links}}\n'
+            "<ul>\n"
+            "  {{#links_by_rel.prev}}\n"
+            '  <li><a href="{{href}}" rel={{rel}}>{{title}}</a></li>\n'
+            "  {{/links_by_rel.prev}}\n"
+            "</ul>\n",
+        )
+
+        # When generated with the omit-tot-html flag …
+        gen = Gen(self.tpl_dir, omit_dot_html=True)
+        gen.render_pages(self.loader, self.pub_dir)
+
+        # Then the links in the index page omit the .html.
+        html_path = self.pub_dir / "index.html"
+        self.assertTrue(html_path.exists())
+        self.assertEqual(
+            html_path.read_text(),
+            '<link rel=alternate href="feed.atom" type="application/atom+xml">\n'
+            "<ul>\n"
+            '  <li><a href="2024-05-06-hello">Greetings</a></li>\n'
+            '  <li><a href="2024-05-05-hello">Hello</a></li>\n'
+            "</ul>\n",
+        )
+        # And the links in the post page omits .html.
+        html_path = self.pub_dir / "2024-05-06-hello.html"
+        self.assertTrue(html_path.exists())
+        self.assertEqual(
+            html_path.read_text(),
+            '<link rel=prev href="2024-05-05-hello">\n'
+            "<ul>\n"
+            '  <li><a href="2024-05-05-hello" rel=prev>Hello</a></li>\n'
+            "</ul>\n",
+        )
+
     def test_renders_index_page_with_text(self):
         self.add_post("2024-05-05-hello", "title: Hello\n\nHello, World!")
         self.add_post("2024-05-06-hello", "title: Greetings\n\nGreetings, World!")
@@ -236,6 +286,74 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "<ul>\n"
             '  <li><a href="2025-03-30-elephant.html">Hello Elephants!</a></li>\n'
             "</ul>\n",
+        )
+
+    def test_renders_tagged_page_sansd_dot_html(self):
+        # Given same setup as previous test …
+        self.add_post(
+            "2024-05-05-hello", "title: Hello\ntags:\n- greeting\n\nHello, World!"
+        )
+        self.add_post(
+            "2025-03-30-elephant",
+            "title: Hello Elephants!\ntags:\n- pachyderms\n- greeting\n\nHello, Elephants!",
+        )
+        self.add_post(
+            "2025-03-31-elephant",
+            "title: Elephants\ntags:\n- pachyderms\n\nHere as some elephats.",
+        )
+        self.add_tpl(
+            "tagged.html",
+            "<h1>{{#tags}}{{^first}} + {{/first}}{{label}}{{/tags}}</h1>\n"
+            "<ul>\n"
+            "{{# reverse_chronological }}\n"
+            '  <li><a href="{{ href }}">{{ title }}</a></li>\n'
+            "{{/ reverse_chronological }}\n"
+            "</ul>\n"
+            "{{#has_narrowings}}\n"
+            "<p>Narrowings:</p>\n"
+            "<ul>\n"
+            "{{#narrowings}}"
+            '  <li><a href="{{dotdotslash}}{{href}}">{{label}} ({{count}})</a></li>\n'
+            "{{/narrowings}}\n"
+            "</ul>\n"
+            "{{/has_narrowings}}\n",
+        )
+        self.add_tpl(
+            "post.html",
+            """\
+<nav>
+{{#tags}}
+    <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
+{{/tags}}
+</nav>
+""",
+        )
+
+        # When rendered with omit flag set …
+        gen = Gen(self.tpl_dir, omit_dot_html=True)
+        gen.render_pages(self.loader, self.pub_dir)
+
+        # Then the links omit .html.
+        self.assertEqual(
+            (self.pub_dir / "tagged" / "greeting.html").read_text(),
+            "<h1>greeting</h1>\n"
+            "<ul>\n"
+            '  <li><a href="2025-03-30-elephant">Hello Elephants!</a></li>\n'
+            '  <li><a href="2024-05-05-hello">Hello</a></li>\n'
+            "</ul>\n"
+            "<p>Narrowings:</p>\n"
+            "<ul>\n"
+            '  <li><a href="../tagged/greeting+pachyderms">pachyderms (1)</a></li>\n'
+            "</ul>\n",
+        )
+        self.assertEqual(
+            (self.pub_dir / "2025-03-30-elephant.html").read_text(),
+            """\
+<nav>
+    <li><a href="tagged/greeting">greeting <span><rp>(</rp>2<rp>)</rp></span></a></li>
+    <li><a href="tagged/pachyderms">pachyderms <span><rp>(</rp>2<rp>)</rp></span></a></li>
+</nav>
+""",
         )
 
     def test_renders_static_files(self):
