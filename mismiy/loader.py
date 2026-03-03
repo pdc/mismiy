@@ -9,7 +9,7 @@ from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
 
 import mistletoe
-from strictyaml import Datetime, Email, Enum, Map, Optional, Str, UniqueSeq, Url
+from strictyaml import Datetime, Email, Enum, Int, Map, Optional, Str, UniqueSeq, Url
 from strictyaml import load as yaml_load
 
 from .links import Link, munged, url_relative_to
@@ -36,6 +36,7 @@ post_schema = Map(
         Optional("published"): Datetime(),
         Optional("updated"): Datetime(),
         Optional("tags"): UniqueSeq(Str()),
+        Optional("ordinal"): Int(),
     }
 )
 meta_schema = Map(
@@ -275,15 +276,18 @@ class Source:
                     self._pages.append(page)
             self._pages.sort(key=lambda page: page.name)
 
-            # Add links
+            # Add ordinals & links
             prev = None
-            for page in self._pages:
+            for index, page in enumerate(self._pages):
+                if "ordinal" not in page.meta:
+                    page.meta["ordinal"] = 1 + index
                 if prev:
                     page.links.append(
                         Link(
                             "prev",
                             url_relative_to(prev.href, page.href),
                             prev.meta["title"],
+                            ordinal=prev.meta["ordinal"],
                         )
                     )
                     prev.links.append(
@@ -291,6 +295,7 @@ class Source:
                             "next",
                             url_relative_to(page.href, prev.href),
                             page.meta["title"],
+                            ordinal=page.meta["ordinal"],
                         )
                     )
                 prev = page

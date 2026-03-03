@@ -8,6 +8,7 @@ class Link:
     href: str
     title: str | None = None
     type: str | None = None
+    ordinal: int | None = None
 
 
 TLink = TypeVar("TLink")

@@ -141,6 +141,28 @@ class TestSource(TempDirMixin, unittest.TestCase):
             Person("Alice de Winter", "https://dewinter.example/alice"),
         )
 
+    # Orgdinals
+
+    def test_adds_ordinals(self):
+        (self.dir_path / "2025-12-07-charley.md").write_text(
+            "title: Char\n\nHello, Charley."
+        )
+        (self.dir_path / "2025-11-07-bravo.md").write_text(
+            "title: Bravo\nordinal: 13\n\nHello, Bravo."
+        )
+        (self.dir_path / "2025-10-07-alpha.md").write_text(
+            "title: Alpha\n\nHello, Alpha."
+        )
+        source = Source(self.dir_path)
+
+        result = source.pages()
+
+        # Then the page that specifies ordinal has that value
+        self.assertEqual(result[1].meta["ordinal"], 13)
+        # And the other pages get numbered starting with 1
+        self.assertEqual(result[0].meta["ordinal"], 1)
+        self.assertEqual(result[2].meta["ordinal"], 3)
+
     # Links between pages:
 
     def test_adds_prev_next_links(self):
