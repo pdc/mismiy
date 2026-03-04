@@ -179,10 +179,18 @@ class TestSource(TempDirMixin, unittest.TestCase):
 
         result = source.pages()
 
-        self.assertIn(Link("next", "2025-11-07-bravo.html", "Bravo"), result[0].links)
-        self.assertIn(Link("prev", "2025-10-07-alpha.html", "Alpha"), result[1].links)
-        self.assertIn(Link("next", "2025-12-07-charley.html", "Char"), result[1].links)
-        self.assertIn(Link("prev", "2025-11-07-bravo.html", "Bravo"), result[2].links)
+        self.assertIn(
+            Link("next", "2025-11-07-bravo.html", "Bravo", ordinal=2), result[0].links
+        )
+        self.assertIn(
+            Link("prev", "2025-10-07-alpha.html", "Alpha", ordinal=1), result[1].links
+        )
+        self.assertIn(
+            Link("next", "2025-12-07-charley.html", "Char", ordinal=3), result[1].links
+        )
+        self.assertIn(
+            Link("prev", "2025-11-07-bravo.html", "Bravo", ordinal=2), result[2].links
+        )
 
     def test_adds_prev_next_links_relative_to_page(self):
         for d in "2025-12", "2025-11":
@@ -200,13 +208,19 @@ class TestSource(TempDirMixin, unittest.TestCase):
 
         result = source.pages()
 
-        self.assertIn(Link("next", "17-bravo.html", "Bravo"), result[0].links)
-        self.assertIn(Link("prev", "07-alpha.html", "Alpha"), result[1].links)
         self.assertIn(
-            Link("next", "../2025-12/07-charley.html", "Char"), result[1].links
+            Link("next", "17-bravo.html", "Bravo", ordinal=2), result[0].links
         )
         self.assertIn(
-            Link("prev", "../2025-11/17-bravo.html", "Bravo"), result[2].links
+            Link("prev", "07-alpha.html", "Alpha", ordinal=1), result[1].links
+        )
+        self.assertIn(
+            Link("next", "../2025-12/07-charley.html", "Char", ordinal=3),
+            result[1].links,
+        )
+        self.assertIn(
+            Link("prev", "../2025-11/17-bravo.html", "Bravo", ordinal=2),
+            result[2].links,
         )
 
     # Kinds of source (page or post):
