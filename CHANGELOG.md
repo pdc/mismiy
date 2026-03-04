@@ -4,6 +4,7 @@
 
 ### Added
 
+- Add metadata field `ordinal` to pages. This gives their position in the sequence. [#7]
 - Add option `--omit-dot-html`. [#1]
 - Page context has `links_by_rel` to allow including specific links in page templates. [#6]
 - Posts have `next` and `prev` links. [#6]

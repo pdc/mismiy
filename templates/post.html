@@ -54,8 +54,8 @@
     </head>
     <body>
         {{> header.html }}
-        <article>
-            <header><h1>{{ title }}</h1></header>
+        <article style="view-transition-name: post-{{ordinal}}">
+            <header><h1>{{ordinal}}. {{ title }}</h1></header>
             <div class="meta">
                 {{#author}}
                 {{^uri}}<span class="h-card">{{name}}</span>{{/uri}}

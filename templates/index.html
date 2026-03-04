@@ -24,7 +24,7 @@
                 {{#published}}
                 <time datetime="{{iso_date}}">{{day}} {{month_name}} {{year}}</time>
                 {{/ published }}
-                <a href="{{ href }}">{{ title }}</a>
+                <a href="{{href}}" style="view-transition-name: post-{{ordinal}}">{{ordinal}}. {{title}}</a>
             </li>
             {{/reverse_chronological}}
         </ul>

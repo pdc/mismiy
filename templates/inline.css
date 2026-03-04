@@ -1,3 +1,9 @@
+@media not (prefers-reduced-motion: reduce) {
+    @view-transition {
+        navigation: auto;
+    }
+}
+
 :root {
     --swiss: "Helvetica Neue", "Arial Nova", "Helvetica", "Arial", sans-serif;
     --code: "Verdana", "DejaVu Sans", "Vera Sans", sans-serif;
