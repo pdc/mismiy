@@ -4,10 +4,16 @@
 
 ### Added
 
-- Add metadata field `ordinal` to pages. This gives their position in the sequence. [#7]
-- Add option `--omit-dot-html`. [#1]
-- Page context has `links_by_rel` to allow including specific links in page templates. [#6]
-- Posts have `next` and `prev` links. [#6]
+- [Add support for embedding figures in pages.](https://mismiy.dev/2026-03-08-figures.md)
+- [Add metadata field `ordinal` to pages. This gives their position in the sequence.](https://mismiy.dev/2026-03-03-ordinal.md)
+- [Add option `--omit-dot-html`.](https://mismiy.dev/2025-12-23-omit-dot-html.md)
+- [Page context has `links_by_rel` to allow including specific links in page templates.](https://mismiy.dev/2025-12-18-prev-next.md)
+- [Posts have `next` and `prev` links.](https://mismiy.dev/2025-12-18-prev-next.md)
+
+### Changed
+
+- In the template context the body of the page is now `body_html`. This is so that HTML-valued
+  fields—which have to be interpolated with triple-braces—all have names ending in `_html`.
 
 ## 0.1.0 (2025-07-27)
 
@@ -19,3 +25,4 @@
   - non-post pages like an about page,
   - very basic navigation using tags, and
   - an Atom feed so it can be read in an RSS reader.
+1

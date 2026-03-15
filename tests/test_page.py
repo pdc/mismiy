@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 from uuid import UUID, uuid5
 
-from mismiy.loader import Page
+from mismiy.loader import Figure, Page
 from mismiy.tagging import Tagging, TagInfo
 
 
@@ -12,7 +12,7 @@ class TestPage(unittest.TestCase):
 
         result = post.context()
 
-        self.assertEqual(result["body"], "<p>Hello, <em>world</em>!</p>\n")
+        self.assertEqual(result["body_html"], "<p>Hello, <em>world</em>!</p>\n")
 
     def test_includes_meta_in_context(self):
         page = Page(
@@ -89,6 +89,111 @@ class TestPage(unittest.TestCase):
 
         # Then the dotdotslash item is the path back to the root of the posts.
         self.assertEqual(result["dotdotslash"], "../../../")
+
+
+class TestPageFigures(unittest.TestCase):
+    def test_uses_src_and_srcset_if_supplied(self):
+        page = Page(
+            "2026/03/14/pi-day",
+            {
+                "figures": [
+                    {
+                        "id": "xyz",
+                        "src": "foo.png",
+                        "srcset": "foo.2x.png 2x, foo.3x.png 3x",
+                        "width": 480,
+                        "height": 270,
+                    },
+                ]
+            },
+            "Hello world",
+        )
+
+        result = page.context()
+
+        # Then metadata fields are converted to HTML.
+        actual = result["figures"][0]
+        self.assertEqual(actual.id, "xyz")
+        self.assertEqual(actual.src, "foo.png")
+        self.assertEqual(actual.srcset, "foo.2x.png 2x, foo.3x.png 3x")
+        self.assertEqual(actual.width, 480)
+        self.assertEqual(actual.height, 270)
+
+    def test_renders_markdown_in_figure_caption_and_description(self):
+        page = Page(
+            "2026/03/14/pi-day",
+            {
+                "figures": [
+                    {
+                        "src": "foo.png",
+                        "caption": "Football on oranges",
+                        "description": "Twenty-two _tiny_ footballers playing a game on the surface of an orange.",
+                    },
+                ]
+            },
+            "Hello world",
+        )
+
+        result = page.context()
+
+        # Then metadata fields are converted to HTML.
+        actual = result["figures"][0]
+        self.assertEqual(actual.caption_html, "<p>Football on oranges</p>")
+        self.assertEqual(
+            actual.description_html,
+            "<p>Twenty-two <em>tiny</em> footballers playing a game on the surface of an orange.</p>",
+        )
+
+    def test_generates_srcset_from_multiple_src(self):
+        page = Page(
+            "2026/03/14/pi-day",
+            {
+                "figures": [
+                    {
+                        "src": {
+                            "1x": "bar.600.png",
+                            "2x": "bar.1200.png",
+                            "3x": "bar.1800.png",
+                        },
+                    },
+                ]
+            },
+            "Hello world",
+        )
+
+        result = page.context()
+
+        # Then the 1x image is used for the src.
+        self.assertEqual(result["figures"][0].src, "bar.600.png")
+        # And the srcset combines all the other src entries.
+        self.assertEqual(
+            result["figures"][0].srcset, "bar.1800.png 3x, bar.1200.png 2x"
+        )
+
+    def test_invents_id_field_for_figures_lacking_one(self):
+        page = Page(
+            "2026/03/14/pi-day",
+            {
+                "figures": [
+                    {"src": "foo.jpeg"},
+                    {"id": "marzipan", "src": "bar.jpeg"},
+                    {"src": "baz.jpeg"},
+                ]
+            },
+            "Hello world",
+        )
+
+        result = page.context()
+
+        # Then the figures without ids have ids invented.
+        self.assertEqual(
+            result["figures"],
+            [
+                Figure(id="fig1", src_by_res={"1x": "foo.jpeg"}),
+                Figure(id="marzipan", src_by_res={"1x": "bar.jpeg"}),
+                Figure(id="fig2", src_by_res={"1x": "baz.jpeg"}),
+            ],
+        )
 
 
 class TestPost(unittest.TestCase):

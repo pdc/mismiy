@@ -1,6 +1,8 @@
+import re
 import shutil
 from collections.abc import Mapping, Sequence
 from datetime import datetime
+from functools import partial
 from importlib.metadata import version
 from pathlib import Path
 from typing import Any
@@ -9,7 +11,7 @@ from urllib.parse import urljoin
 from chevron import render
 
 from .links import Link, munged
-from .loader import Loader, Page, datetime_naïve
+from .loader import Figure, Loader, Page, datetime_naïve
 from .tagging import Tagging
 from .xml import Doc, Elt
 
@@ -158,6 +160,19 @@ class Gen:
                     except TypeError as e:
                         print(e)
 
+        if figures := context.get("figures"):
+            # Replace figures with rendered template.
+            # First, make a regexp that matches image tags that reference figures.
+            ids = "|".join(f.id for f in figures)
+            figure_re = re.compile(
+                rf'<p><img src="(?P<src>{ids})" alt="(?P<alt>[^"]*)" /></p>\n'
+            )
+            # Now replace them with rendering of the figure template.
+            body_html = figure_re.sub(
+                partial(self._render_figure, figures), context["body_html"]
+            )
+            more_context["body_html"] = body_html
+
         out_file = public_path / name
         html = render(
             self.templates[tpl_name or name],
@@ -165,6 +180,17 @@ class Gen:
             partials_dict=self.templates,
         )
         out_file.write_text(html, encoding="UTF-8")
+
+    def _render_figure(self, figures: list[Figure], m: re.Match[str]) -> str:
+        """Function giving the substitution for a regex match against a figure."""
+        figure_id = m["src"]
+        figure = next(f for f in figures if f.id == figure_id)
+
+        if alt_text := m["alt"]:
+            figure.alt = alt_text
+        return render(
+            self.templates["figure.html"], figure, partials_dict=self.templates
+        )
 
     def _atom_feed(self, loader: Loader, page: int) -> Doc:
         doc = Doc("atom:feed")

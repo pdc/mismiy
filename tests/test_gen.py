@@ -42,7 +42,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "post.html",
             "<!DOCTYPE html><title>{{ title }}</title><body>\n"
             "<h1>{{ title }}</h1>\n"
-            "{{{ body }}}\n"
+            "{{{body_html}}}\n"
             '{{#links_by_rel}}{{#prev}}<a href="{{href}}">{{title}}</a>{{/prev}}{{/links_by_rel}}\n'
             '{{#links_by_rel.next}}Next: <a href="{{href}}">{{title}}</a>{{/links_by_rel.next}}\n'
             "{{> footer.html }}</body>\n",
@@ -71,7 +71,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "page.html",
             "<!DOCTYPE html><title>{{ title }}</title><body>\n"
             "<h1>{{ title }}</h1>\n"
-            "{{{ body }}}\n"
+            "{{{body_html}}}\n"
             "{{> footer.html }}</body>\n",
         )
         self.add_tpl("footer.html", "<aside>Footer</aside>\n")
@@ -95,7 +95,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
         self.add_tpl(
             "page.html",
             "<h1>{{ title }}</h1>\n"
-            "{{{ body }}}\n"
+            "{{{body_html}}}\n"
             '{{#tags}}<a href="{{href}}">{{label}} ({{count}})</a>{{/tags}}\n'
             "</body>\n",
         )
@@ -112,6 +112,56 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "<p>Hello, World!</p>\n\n"
             '<a href="tagged/food.html">food (1)</a>\n'
             "</body>\n",
+        )
+
+    def test_render_page_with_figure(self):
+        # Given a page that defines figures & has a reference to one …
+        self.add_page(
+            "foo",
+            """title: Foo Title
+figures:
+ - src: pic/foo.png
+   caption: caption for foo
+   width: 1920
+   height: 1080
+
+Hello, world
+
+![foo alt text](fig1)
+
+The end.
+""",
+        )
+        self.add_tpl(
+            "page.html",
+            """
+<h1>{{title}}</h1>
+{{{body_html}}}""",
+        )
+        self.add_tpl(
+            "figure.html",
+            """<figure>
+    <img src="{{src}}" alt="{{alt}}" width={{width}} height={{height}}>
+    <caption>{{{caption_html}}}</caption>
+</figure>
+""",
+        )
+
+        gen = Gen(self.tpl_dir)
+        gen.render_pages(self.loader, self.pub_dir)
+
+        html_path = self.pub_dir / "foo.html"
+        self.assertEqual(
+            html_path.read_text(),
+            """
+<h1>Foo Title</h1>
+<p>Hello, world</p>
+<figure>
+    <img src="pic/foo.png" alt="foo alt text" width=1920 height=1080>
+    <caption><p>caption for foo</p></caption>
+</figure>
+<p>The end.</p>
+""",
         )
 
     def test_renders_index_page(self):
@@ -199,7 +249,7 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "index.html",
             """{{#links}}<link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>\n{{/links}}
 <article>
-{{{ body }}}</article>
+{{{body_html}}}</article>
 <ul>
   {{# reverse_chronological }}
   <li><a href="{{ href }}">{{ title }}</a></li>

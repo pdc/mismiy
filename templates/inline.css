@@ -240,3 +240,29 @@ th {
     font-weight: 500;
     font-style: italic;
 }
+
+
+figure {
+    margin: 1lh 0;
+    position: relative;
+    width: fit-content;
+
+    & img {
+        display: block;
+    }
+
+    & figcaption {
+        font-size: 13px;
+
+        & .desc-link {
+            font-family: var(--swiss);
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+    }
+}
+
+.footnotes {
+    font-size: 13px;
+}

@@ -1,0 +1,9 @@
+<figure id="{{id}}">
+    <img alt="{{alt}}"{{#description}} longdesc="#{{id}}-desc"{{/description}}
+        {{#width}}width={{.}} {{/width}}{{#height}}height={{.}} {{/height}}src="{{src}}"{{#srcset}}
+        srcset="{{srcset}}"{{/srcset}}>{{#caption}}
+    <figcaption>
+       {{{caption_html}}}{{#description}}
+       <a href="#{{id}}-desc" class="desc-link">[Image description]</a>{{/description}}
+    </figcaption>{{/caption}}
+</figure>

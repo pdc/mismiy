@@ -9,7 +9,19 @@ from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
 
 import mistletoe
-from strictyaml import Datetime, Email, Enum, Int, Map, Optional, Str, UniqueSeq, Url
+from strictyaml import (
+    Datetime,
+    Email,
+    Enum,
+    Int,
+    Map,
+    MapPattern,
+    Optional,
+    Seq,
+    Str,
+    UniqueSeq,
+    Url,
+)
 from strictyaml import load as yaml_load
 
 from .links import Link, munged, url_relative_to
@@ -28,7 +40,19 @@ person_schema = Str() | Map(
         Optional("email"): Email(),
     }
 )
-post_schema = Map(
+
+
+figure_schema = Map(
+    {
+        Optional("id"): Str() | Int(),
+        "src": Str() | MapPattern(Str(), Str()),
+        Optional("width"): Int(),
+        Optional("height"): Int(),
+        Optional("caption"): Str(),
+        Optional("description"): Str(),
+    }
+)
+page_schema = Map(
     {
         "title": Str(),
         Optional("author"): person_schema,
@@ -37,6 +61,7 @@ post_schema = Map(
         Optional("updated"): Datetime(),
         Optional("tags"): UniqueSeq(Str()),
         Optional("ordinal"): Int(),
+        Optional("figures"): Seq(figure_schema),
     }
 )
 meta_schema = Map(
@@ -75,6 +100,69 @@ class Person:
 
 
 @dataclass
+class Figure:
+    """One figure on a page (generally an image with optional caption)."""
+
+    id: str
+    src_by_res: dict[str, str]
+    caption: str = None
+    description: str = None
+    width: int = None
+    height: int = None
+    _srcset: str = None
+
+    @property
+    def src(self):
+        return self.src_by_res.get("1x")
+
+    @property
+    def srcset(self):
+        """Value suitable for a srcset attrbiute."""
+        if not self._srcset and self.src_by_res:
+            result = ", ".join(
+                f"{src} {res}"
+                for res, src in sorted(self.src_by_res.items(), reverse=True)
+                if res != "1x"
+            )
+            if result:
+                self._srcset = result
+        return self._srcset
+
+    @property
+    def caption_html(self):
+        """The caption of the figure, formatted as HTML fragment."""
+        if self.caption:
+            return mistletoe.markdown(self.caption).rstrip()
+
+    @property
+    def description_html(self):
+        """The description of the figure, formatted as HTML fragment."""
+        if self.description:
+            return mistletoe.markdown(self.description).rstrip()
+
+    @classmethod
+    def from_spec(cls, spec: dict):
+        """Given a spec matching the figure_schema, rethrn a Figure instance."""
+        if spec:
+            match spec.get("src"):
+                case None:
+                    src_by_res = None
+                case str(src):
+                    src_by_res = {"1x": src}
+                case specs:
+                    src_by_res = specs
+            return cls(
+                spec.get("id"),
+                src_by_res,
+                spec.get("caption"),
+                spec.get("description"),
+                _srcset=spec.get("srcset"),
+                width=spec.get("width"),
+                height=spec.get("height"),
+            )
+
+
+@dataclass
 class Page:
     """One page on the site."""
 
@@ -107,13 +195,20 @@ class Page:
                 "name": self.name,
                 "href": self.href,
                 "dotdotslash": self.dotdotslash,
-                "body": self.body_html(),
+                "body_html": self.body_html(),
                 "links": links,
                 "links_by_rel": links_by_rel,
             }
         )
         if tagging and (tag_infos := tagging.page_tags(self)):
             result["tags"] = tag_infos
+        if figure_specs := self.meta.get("figures"):
+            figures = [Figure.from_spec(spec) for spec in figure_specs]
+            needs_id = [f for f in figures if not f.id]
+            for i, f in enumerate(needs_id):
+                f.id = f"fig{i + 1}"
+            result["figures"] = figures
+
         return result
 
     def reference(self, tagging: Tagging = None, *, omit_dot_html=False):
@@ -158,7 +253,7 @@ class Page:
         parts = blank_line.split(text, 1)
         if len(parts) != 2:
             raise ValueError("Expected meta and body separated by blank line.")
-        meta = yaml_load(parts[0], post_schema).data
+        meta = yaml_load(parts[0], page_schema).data
         if not meta.get("published") and (m := date_re.search(name)):
             meta["published"] = datetime(int(m[1]), int(m[2]), int(m[3]))
         for k, v in meta.items():

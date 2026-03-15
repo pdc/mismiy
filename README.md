@@ -50,7 +50,12 @@ in the first part of the 1726 novel _Gulliver's Travels_ by [Jonathan Swift].
 ```
 
 The first section defines metadata like the title and author name. It ends with
-a blank line. The rest of the file is [Markdown] text.
+the first blank line. The rest of the file is [Markdown] text.
+
+Within the Markdown code a paragraph containing only an image tag is used to
+insert a figure. For example, `![A sunny meadow](fig1)` looks up the figure with
+`id` value `fig1` and renders the partial template `figure.html` to produce the
+HTML representation of the figure and its caption.
 
 The file name is used in the URL of the post, with the `.md` or `.markdown` suffix
 replaced by `.html`.
@@ -101,6 +106,36 @@ tags:
   - pie
   - old recipe book
 ```
+
+You can also include metadata about **figures** (images included in the post).
+
+```yaml
+figures:
+  - id: foo
+    src: pics/foo.png
+    width: 560
+    height: 315
+    caption: How the foo is bar.
+```
+
+Figures have mandatory field `src`, which can be either a string (URL reference)
+or a map from pixel density to URL reference, like so:
+
+```yaml
+figures:
+  - id: foo
+    src:
+      1x: pics/foo.png
+      2x: pics/foo.1120.png
+    width: 560
+    height: 315
+    caption: How the foo is bar.
+```
+
+The `id` field for the figure is optional, and will be default to `fig1`, `fig2`, and so on.
+The `caption` field is optional; it supplies text that goes next to the figure.
+An optional `description` field supplies a long description of the appearance of
+the figure.
 
 All of the fields are optional except `title`.
 
@@ -172,12 +207,14 @@ When rendering a page the template named for the kind of page is used:
 The other files, like `header.html` and `inline.css` are partial templates
 (partials) referenced from the other templates.
 
+The special template `figure.html` is used for rendering figures.
+
 The context for a page or post template includes the following:
 
 Key | Value
 --- | ---
 `author` | An object with fields `name`, `uri`, and `email`; the latter two may be null
-`body` | The text of the page, converted to HTML fragments
+`body_html` | The text of the page, converted to HTML fragments
 `dotdotslash` | Relative URL to the root of the blog: a sequence zero or more repetitions of `../` that can be prepended to a relative URL
 `href` | URL of the page, relative to the base URL of the blog
 `name` | Name of the page, formed from the file name without `.md` or `.markdown` suffix
@@ -186,6 +223,7 @@ Key | Value
 `updated` | A date object, as described below, or null
 `links` | List of objects with `rel`, `href`, optional `title` and optional `type`
 `links_by_rel` | The same link objects, but indexed by their `rel` value
+`figures` | Normalized metadata about figures in the page
 
 Date objects are a halfway house to proper localization of dates. They contain
 the following fields:
@@ -200,6 +238,22 @@ Key | Value | Example
 `month_name` | Full name of month | `July`
 `month` | Month as a number (1 or 2 digits) | `7`
 `year` | Year as a four-digit number | `2025`
+
+The objects representing figures have the following fields:
+
+Key | Value
+--- | ---
+`id` | Shorthand used to reference the image in the Markdown code
+`src` | URL of image data
+`srcset` | URLs of image data for high-density displays, or blank.
+`width` | Width on page in CSS units
+`height` | Height on page on CSS units
+`caption_html` | Optional caption for the figure
+`description_html` | Optional long description for the figure
+
+When rendering the `figure.html` template, the above fields comprise the context
+for the template. There is an additional field
+`alt`, the alternative text provided in the image reference.
 
 Index pages have the following context:
 
