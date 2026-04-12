@@ -11,6 +11,8 @@
     --indent: 2em;
     --vgap: 0.667lh;
     --vsmall: 0.333lh;
+
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -253,6 +255,7 @@ figure {
 
     & figcaption {
         font-size: 13px;
+        max-width: 36rem;
 
         & .desc-link {
             font-family: var(--swiss);
@@ -265,4 +268,8 @@ figure {
 
 .footnotes {
     font-size: 13px;
+
+    & p {
+        max-width: 40em;
+    }
 }
