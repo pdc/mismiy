@@ -130,15 +130,21 @@ class Figure:
 
     @property
     def caption_html(self):
-        """The caption of the figure, formatted as HTML fragment."""
+        """The caption of the figure, formatted as HTML fragment.
+
+        The outermost <p>…</p> is stripped off.
+        """
         if self.caption:
-            return mistletoe.markdown(self.caption).rstrip()
+            return without_p(mistletoe.markdown(self.caption))
 
     @property
     def description_html(self):
-        """The description of the figure, formatted as HTML fragment."""
+        """The description of the figure, formatted as HTML fragment.
+
+        The outermost <p>…</p> is stripped off.
+        """
         if self.description:
-            return mistletoe.markdown(self.description).rstrip()
+            return without_p(mistletoe.markdown(self.description))
 
     @classmethod
     def from_spec(cls, spec: dict):
@@ -160,6 +166,10 @@ class Figure:
                 width=spec.get("width"),
                 height=spec.get("height"),
             )
+
+
+def without_p(html: str) -> str:
+    return html.rstrip().removeprefix("<p>").removesuffix("</p>")
 
 
 @dataclass

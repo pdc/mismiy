@@ -138,10 +138,10 @@ class TestPageFigures(unittest.TestCase):
 
         # Then metadata fields are converted to HTML.
         actual = result["figures"][0]
-        self.assertEqual(actual.caption_html, "<p>Football on oranges</p>")
+        self.assertEqual(actual.caption_html, "Football on oranges")
         self.assertEqual(
             actual.description_html,
-            "<p>Twenty-two <em>tiny</em> footballers playing a game on the surface of an orange.</p>",
+            "Twenty-two <em>tiny</em> footballers playing a game on the surface of an orange.",
         )
 
     def test_generates_srcset_from_multiple_src(self):

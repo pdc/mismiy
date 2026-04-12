@@ -158,7 +158,7 @@ The end.
 <p>Hello, world</p>
 <figure>
     <img src="pic/foo.png" alt="foo alt text" width=1920 height=1080>
-    <caption><p>caption for foo</p></caption>
+    <caption>caption for foo</caption>
 </figure>
 <p>The end.</p>
 """,
