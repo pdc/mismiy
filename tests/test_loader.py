@@ -141,7 +141,7 @@ class TestSource(TempDirMixin, unittest.TestCase):
             Person("Alice de Winter", "https://dewinter.example/alice"),
         )
 
-    # Orgdinals
+    # Ordinals
 
     def test_adds_ordinals(self):
         (self.dir_path / "2025-12-07-charley.md").write_text(
@@ -326,6 +326,66 @@ class TestSource(TempDirMixin, unittest.TestCase):
         self.assertEqual(
             source.now,
             datetime(2024, 5, 29, 22, 48).astimezone(timezone.utc),
+        )
+
+    # Metadatas from files
+
+    def test_adds_field_file_to_page_metadata(self):
+        # Given a post …
+        (self.dir_path / "2026-04-12-foo.md").write_text(
+            """title: Foo
+author: Bob
+
+Foo
+"""
+        )
+        # And a corresponding metadata file …
+        (self.dir_path / "2026-04-12-foo.figures.yaml").write_text(
+            """
+- id: quux
+  src: quux.png
+- id: quux2
+  src: quux2.png
+"""
+        )
+
+        # When reading in this source …
+        source = Source(self.dir_path)
+        result = source.pages()
+
+        # Then metadata from the file is added to the page.
+        self.assertEqual(
+            result[0].meta["figures"],
+            [
+                {"id": "quux", "src": "quux.png"},
+                {"id": "quux2", "src": "quux2.png"},
+            ],
+        )
+
+    def test_adds_field_from_lookup_file(self):
+        # Given a post …
+        (self.dir_path / "2026-04-12-foo.md").write_text(
+            """title: Foo
+author: Bob
+
+Foo
+"""
+        )
+        # And a shared metadata file …
+        (self.dir_path / "id.field.yaml").write_text(
+            """
+2026-04-12-foo: 'urn:uuid:b41d659c-5a57-4a9c-90df-ce84631ffaa8'
+2026-04-05-bar: 'urn:uuid:ff1b608c-b5a1-49b0-952b-1e421b956782'
+"""
+        )
+
+        # When reading in this source …
+        source = Source(self.dir_path)
+        result = source.pages()
+
+        # Then metadata from the file is added to the page.
+        self.assertEqual(
+            result[0].meta["id"], "urn:uuid:b41d659c-5a57-4a9c-90df-ce84631ffaa8"
         )
 
 

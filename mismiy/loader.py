@@ -362,6 +362,17 @@ class Source:
         kind = self.kind
         if self._pages is None:
             self._pages = []
+
+            field_lookups = {}
+            for lookup_path in self.pages_dir.glob("*.field.yaml"):
+                # The file id.fields.yaml is used to provide a map from page name to id field value.
+                field_name = lookup_path.name.removesuffix(".field.yaml")
+                lookup_schema = MapPattern(Str(), page_schema.get_validator(field_name))
+                lookup_text = lookup_path.read_text(encoding="UTF-8")
+                lookup = yaml_load(lookup_text, lookup_schema).data
+                field_lookups[field_name] = lookup
+
+            page_lookup = {}
             for suffix in ".markdown", ".md":
                 for page_path in self.pages_dir.rglob(f"*{suffix}"):
                     name = str(page_path.relative_to(self.pages_dir))
@@ -378,7 +389,42 @@ class Source:
                         else:
                             continue
                     page.meta["kind"] = kind
+
+                    # Add metadata from lookups
+                    for field_name, field_lookup in field_lookups.items():
+                        if field_value := field_lookup.get(page.name):
+                            if (
+                                field_name in page.meta
+                                and page.meta[field_name] != field_value
+                            ):
+                                raise Exception(
+                                    f"{page.name}: {field_name}: defined in both page and {field_name}.field.yaml"
+                                )
+                            page.meta[field_name] = field_value
+
                     self._pages.append(page)
+                    page_lookup[page.name] = page
+
+            for meta_path in self.pages_dir.rglob("*.yaml"):
+                page_name, dot, field_name = (
+                    str(meta_path.relative_to(self.pages_dir))
+                    .removesuffix(".yaml")
+                    .rpartition(".")
+                )
+                if dot and (page := page_lookup.get(page_name)):
+                    if (
+                        page.meta.get(field_name)
+                        and page.meta[field_name] != field_value
+                    ):
+                        raise Exception(
+                            f"{page.name}: {field_name}: defined in both page and {meta_path}"
+                        )
+                    subschema = page_schema.get_validator(field_name)
+                    if subschema:
+                        field_text = meta_path.read_text(encoding="UTF-8")
+                        field_value = yaml_load(field_text, subschema).data
+                        page.meta[field_name] = field_value
+
             self._pages.sort(key=lambda page: page.name)
 
             # Add ordinals & links

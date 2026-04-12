@@ -4,6 +4,7 @@
 
 ### Added
 
+- [Add support for external metadata.](https://mismiy.dev/2026-04-12-external-metadata.md)
 - [Add support for embedding figures in pages.](https://mismiy.dev/2026-03-08-figures.md)
 - [Add metadata field `ordinal` to pages. This gives their position in the sequence.](https://mismiy.dev/2026-03-03-ordinal.md)
 - [Add option `--omit-dot-html`.](https://mismiy.dev/2025-12-23-omit-dot-html.md)
@@ -25,4 +26,3 @@
   - non-post pages like an about page,
   - very basic navigation using tags, and
   - an Atom feed so it can be read in an RSS reader.
-1

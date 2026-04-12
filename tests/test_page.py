@@ -126,7 +126,7 @@ class TestPageFigures(unittest.TestCase):
                 "figures": [
                     {
                         "src": "foo.png",
-                        "caption": "Football on oranges",
+                        "caption": "Football on **oranges**",
                         "description": "Twenty-two _tiny_ footballers playing a game on the surface of an orange.",
                     },
                 ]
@@ -138,7 +138,7 @@ class TestPageFigures(unittest.TestCase):
 
         # Then metadata fields are converted to HTML.
         actual = result["figures"][0]
-        self.assertEqual(actual.caption_html, "Football on oranges")
+        self.assertEqual(actual.caption_html, "Football on <strong>oranges</strong>")
         self.assertEqual(
             actual.description_html,
             "Twenty-two <em>tiny</em> footballers playing a game on the surface of an orange.",
