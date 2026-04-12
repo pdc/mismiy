@@ -4,12 +4,12 @@
 
 ### Added
 
-- [Add support for external metadata.](https://mismiy.dev/2026-04-12-external-metadata.md)
-- [Add support for embedding figures in pages.](https://mismiy.dev/2026-03-08-figures.md)
-- [Add metadata field `ordinal` to pages. This gives their position in the sequence.](https://mismiy.dev/2026-03-03-ordinal.md)
-- [Add option `--omit-dot-html`.](https://mismiy.dev/2025-12-23-omit-dot-html.md)
-- [Page context has `links_by_rel` to allow including specific links in page templates.](https://mismiy.dev/2025-12-18-prev-next.md)
-- [Posts have `next` and `prev` links.](https://mismiy.dev/2025-12-18-prev-next.md)
+- [Add support for external metadata.](https://mismiy.dev/2026-04-12-external-metadata)
+- [Add support for embedding figures in pages.](https://mismiy.dev/2026-03-08-figures)
+- [Add metadata field `ordinal` to pages. This gives their position in the sequence.](https://mismiy.dev/2026-03-03-ordinal)
+- [Add option `--omit-dot-html`.](https://mismiy.dev/2025-12-23-omit-dot-html)
+- [Page context has `links_by_rel` to allow including specific links in page templates.](https://mismiy.dev/2025-12-18-prev-next)
+- [Posts have `next` and `prev` links.](https://mismiy.dev/2025-12-18-prev-next)
 
 ### Changed
 
