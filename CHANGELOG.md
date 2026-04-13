@@ -4,7 +4,7 @@
 
 ### Added
 
-- [Add support for external metadata.](https://mismiy.dev/2026-04-12-external-metadata)
+- [Add support for external metadata.](https://mismiy.dev/2026-04-12-external-meta)
 - [Add support for embedding figures in pages.](https://mismiy.dev/2026-03-08-figures)
 - [Add metadata field `ordinal` to pages. This gives their position in the sequence.](https://mismiy.dev/2026-03-03-ordinal)
 - [Add option `--omit-dot-html`.](https://mismiy.dev/2025-12-23-omit-dot-html)
