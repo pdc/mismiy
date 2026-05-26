@@ -7,19 +7,19 @@
         <style>
             {{> inline.css }}
 
-            article h1 {
+            main h1 {
                 margin: 3rem 0 0;
                 font-size: 1.5em;
                 font-weight: 500;
             }
             @media (max-width: 36em) {
-                article {
+                main {
                     margin-right: 0.5em;
                     margin-left: 0.5em;
                 }
             }
             @media (min-width: 36em) {
-                article {
+                main {
                     grid-column: 2 / -1;
                     display: grid;
                     grid-template-columns: subgrid;
@@ -44,7 +44,7 @@
                 }
             }
             @media (min-width: 48em) {
-                article {
+                main {
                     & .more {
                         margin-top: 0;
                         grid-column: 3;
@@ -66,7 +66,7 @@
     </head>
     <body>
         {{> header.html }}
-        <article style="view-transition-name: post-{{ordinal}}">
+        <main style="view-transition-name: post-{{ordinal}}">
             <header><h1>{{ordinal}}. {{ title }}</h1></header>
             <div class="meta">
                 {{#author}}
@@ -100,7 +100,7 @@
                 </ol>
             </aside>
             {{/has_figures}}
-        </article>
+        </main>
         <link rel=stylesheet href="{{ dotdotslash }}style.css">
     </body>
 </html>
