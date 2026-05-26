@@ -3,18 +3,19 @@ author: Damian Cugley
 tags:
 - Mismiy command
 - Markdown documents
+updated: 2026-05-26
 
 
-
-It makes for metadata about the figures in a post to be included in the metadata
-for the post itself, but it does make the front matter inconveniently long. We
+It makes sense for metadata about the figures in a post to be included in the metadata
+of the post itself, but it does make the front matter inconveniently long. We
 can address this by allowing _external_ metadata.
 
 
 ## External metadata
 
-For now we will use _external metadata_ to just means the data in the same format,
-but in a separate file. We will use file name conventions to link the metadata to the post—avoiding having
+For now we will use _external metadata_ to just means the data in the same format
+as the metadata at the top of a page,
+but in a separate file. We will use file-name conventions to link the metadata to the post—avoiding having
 explicit links or includes, which are all to likely to create dangling references.
 
 One advantage of this—beyond decluttering the post file itself—is that the metadata
