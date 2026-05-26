@@ -1,16 +1,16 @@
 @media (prefers-color-scheme: light) {
     :root {
-        /** Flexoki aqua-600, blue-700 */
-        --link: rgb(58, 169, 159);
-        --visited: rgb(26, 79, 140);
+        /** Reasonable colors blue-4, indigo-5 */
+        --link: #006DCA;
+        --visited: #00328A;
     }
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
-        /** Flexoki aqua-400, blue-300 */
-        --link: rgb(58, 169, 159);
-        --visited: rgb(102, 160, 200);
+        /* Reasonable colors blue-3, indigo-2 */
+        --link: #0089FC;
+        --visited: #DEDDFF;
     }
 }
 
