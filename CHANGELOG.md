@@ -16,7 +16,7 @@
 - In the template context the body of the page is now `body_html`. This is so that HTML-valued
   fields—which have to be interpolated with triple-braces—all have names ending in `_html`.
 
-## 0.1.0 (2025-07-27)
+## [0.1.0] (2025-07-27)
 
 ### Added
 
@@ -26,3 +26,6 @@
   - non-post pages like an about page,
   - very basic navigation using tags, and
   - an Atom feed so it can be read in an RSS reader.
+
+
+[0.1.0]: https://github.com/pdc/mismiy/releases/tag/0.1.0
