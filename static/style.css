@@ -10,7 +10,7 @@
     :root {
         /* Reasonable colors blue-3, indigo-2 */
         --link: #0089FC;
-        --visited: #DEDDFF;
+        --visited: #008FDB;
     }
 }
 
@@ -34,16 +34,16 @@ body>header {
 main,
 nav,
 aside {
-    & a:link {
+    a:link {
         color: var(--link);
     }
 
-    & a:visited {
+    a:visited {
         color: var(--visited);
     }
 
-    & a:hover,
-    & a:active {
+    a:hover,
+    a:active {
         color: var(--link);
     }
 }

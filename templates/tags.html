@@ -1,8 +1,10 @@
 {{#has_tags}}
 <p>Posts on similar topics</p>
 <nav class="tags">
-    {{#tags}}
-    <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
-    {{/tags}}
+    <ul>
+        {{#tags}}
+        <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
+        {{/tags}}
+    </ul>
 </nav>
 {{/has_tags}}

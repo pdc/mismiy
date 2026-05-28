@@ -80,9 +80,11 @@
             {{{body_html}}}</div>
             <div class="more">{{#is_draft}}
                 <b class="draft">[DRAFT]</b>{{/is_draft}}{{#links_by_rel}}
-                <nav class="links">{{#next}}
-                    <li>Next post: <a href={{href}}>{{title}}</a></li>{{/next}}{{#prev}}
-                    <li>Previous post: <a href={{href}}>{{title}}</a></li>{{/prev}}
+                <nav class="links">
+                    <ul>{{#next}}
+                        <li>Next post: <a href={{href}}>{{title}}</a></li>{{/next}}{{#prev}}
+                        <li>Previous post: <a href={{href}}>{{title}}</a></li>{{/prev}}
+                    </ul>
                 </nav>{{/links_by_rel}}
                 {{>tags.html}}
             </div>

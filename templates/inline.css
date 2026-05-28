@@ -35,7 +35,7 @@ body>header {
         font-weight: 200;
     }
 
-    & nav {
+    & nav ul {
         display: flex;
         gap: 1em;
         margin: 0;
@@ -114,7 +114,7 @@ body>header {
         }
     }
 
-    & nav.tags {
+    & nav.tags ul {
         margin: 0;
         padding: 0;
         display: grid;
@@ -137,7 +137,10 @@ body>header {
         }
     }
 
-    & nav.links {
+    & nav.links ul {
+        margin: 0;
+        padding: 0;
+
         & li {
             display: block;
             margin: 0;
