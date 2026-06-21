@@ -1,0 +1,11 @@
+{
+    "@context": "https://schema.org/",
+    "@type": "TechArticle",
+    "name": "Resource description",
+    "description": "Embedding and inlining information about a post in a Mismiy post.",
+    "isPartOf": {
+        "@type": "Blog",
+        "@id": "https://mismiy.dev/",
+        "name": "Mismiy build log"
+    }
+}

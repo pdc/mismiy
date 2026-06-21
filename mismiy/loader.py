@@ -1,3 +1,4 @@
+import json
 import locale
 import re
 from collections.abc import Mapping
@@ -9,6 +10,7 @@ from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
 
 import mistletoe
+from strictyaml import Any as Any_Yaml
 from strictyaml import (
     Datetime,
     Email,
@@ -21,6 +23,7 @@ from strictyaml import (
     Str,
     UniqueSeq,
     Url,
+    as_document,
 )
 from strictyaml import load as yaml_load
 
@@ -55,6 +58,7 @@ figure_schema = Map(
 page_schema = Map(
     {
         "title": Str(),
+        Optional("summary"): Str(),
         Optional("author"): person_schema,
         Optional("id"): Str(),
         Optional("published"): Datetime(),
@@ -62,6 +66,7 @@ page_schema = Map(
         Optional("tags"): UniqueSeq(Str()),
         Optional("ordinal"): Int(),
         Optional("figures"): Seq(figure_schema),
+        Optional("data"): Any_Yaml(),
     }
 )
 meta_schema = Map(
@@ -364,13 +369,14 @@ class Source:
             self._pages = []
 
             field_lookups = {}
-            for lookup_path in self.pages_dir.glob("*.field.yaml"):
-                # The file id.fields.yaml is used to provide a map from page name to id field value.
-                field_name = lookup_path.name.removesuffix(".field.yaml")
-                lookup_schema = MapPattern(Str(), page_schema.get_validator(field_name))
-                lookup_text = lookup_path.read_text(encoding="UTF-8")
-                lookup = yaml_load(lookup_text, lookup_schema).data
-                field_lookups[field_name] = lookup
+            for suffix, parse in ("yaml", yaml_parse), ("json", json_parse):
+                for lookup_path in self.pages_dir.glob(f"*.field.{suffix}"):
+                    # The file id.fields.yaml is used to provide a map from page name to id field value.
+                    field_name = lookup_path.name.removesuffix(f".field.{suffix}")
+                    schema = MapPattern(Str(), page_schema.get_validator(field_name))
+                    lookup_text = lookup_path.read_text(encoding="UTF-8")
+                    lookup = parse(lookup_text, schema)
+                    field_lookups[field_name] = lookup
 
             page_lookup = {}
             for suffix in ".markdown", ".md":
@@ -405,25 +411,26 @@ class Source:
                     self._pages.append(page)
                     page_lookup[page.name] = page
 
-            for meta_path in self.pages_dir.rglob("*.yaml"):
-                page_name, dot, field_name = (
-                    str(meta_path.relative_to(self.pages_dir))
-                    .removesuffix(".yaml")
-                    .rpartition(".")
-                )
-                if dot and (page := page_lookup.get(page_name)):
-                    if (
-                        page.meta.get(field_name)
-                        and page.meta[field_name] != field_value
-                    ):
-                        raise Exception(
-                            f"{page.name}: {field_name}: defined in both page and {meta_path}"
-                        )
-                    subschema = page_schema.get_validator(field_name)
-                    if subschema:
-                        field_text = meta_path.read_text(encoding="UTF-8")
-                        field_value = yaml_load(field_text, subschema).data
-                        page.meta[field_name] = field_value
+            for sufix, parse in ("yaml", yaml_parse), ("json", json_parse):
+                for meta_path in self.pages_dir.rglob(f"*.{sufix}"):
+                    page_name, dot, field_name = (
+                        str(meta_path.relative_to(self.pages_dir))
+                        .removesuffix(f".{sufix}")
+                        .rpartition(".")
+                    )
+                    if dot and (page := page_lookup.get(page_name)):
+                        if (
+                            page.meta.get(field_name)
+                            and page.meta[field_name] != field_value
+                        ):
+                            raise Exception(
+                                f"{page.name}: {field_name}: defined in both page and {meta_path}"
+                            )
+                        subschema = page_schema.get_validator(field_name)
+                        if subschema:
+                            field_text = meta_path.read_text(encoding="UTF-8")
+                            field_value = parse(field_text, subschema)
+                            page.meta[field_name] = field_value
 
             self._pages.sort(key=lambda page: page.name)
 
@@ -452,6 +459,19 @@ class Source:
                 prev = page
 
         return self._pages
+
+
+def yaml_parse(field_text: str, subschema, label=None):
+    return yaml_load(field_text, subschema, label=label).data
+
+
+def json_parse(field_text: str, subschema, label=None):
+    # Parse as JSON (this raises ValueError if not well-formed).
+    data = json.loads(field_text)
+    # Validate as if StrictYaml.
+    document = as_document(data)
+    document.revalidate(subschema)
+    return document.data
 
 
 class Loader:

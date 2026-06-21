@@ -2,7 +2,12 @@
 <html lang=en>
     <head>
         <meta charset=UTF-8>
-        <title>{{ title }}</title>
+        <title>{{#title}}{{.}} – {{/title}}Mismiy</title>
+        {{#summary}}<meta name="description" content="{{.}}">{{/summary}}
+        <meta property="og:title" content="{{title}}">
+        <meta property="og:site_name" content="Mismiy">
+        <meta property="og:type" content="article">
+
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>
             {{> inline.css }}
@@ -25,8 +30,12 @@
                     grid-template-columns: subgrid;
                     grid-template-rows: max-content auto auto;
 
-                    & h1 {
+                    & h1:last-child {
                         margin-bottom: 1.5em;
+                    }
+                    & h1 + span {
+                        margin: 0.5lh 0 2lh;
+                        display: block;
                     }
                     & > header {
                         grid-column: 1 / -1;
@@ -66,17 +75,20 @@
     </head>
     <body>
         {{> header.html }}
-        <main style="view-transition-name: post-{{ordinal}}">
-            <header><h1>{{ordinal}}. {{ title }}</h1></header>
+        <main style="view-transition-name: post-{{ordinal}}" class="h-entry">
+            <header>
+                <h1 class="p-name">{{ordinal}}. {{ title }}</h1>{{#summary}}
+                <span class="p-summary">{{.}}</span>{{/summary}}
+            </header>
             <div class="meta">
                 {{#author}}
-                {{^uri}}<span class="h-card">{{name}}</span>{{/uri}}
-                {{#uri}}<a href="{{uri}}">{{name}}</a>{{/uri}}
+                {{^uri}}<span class="p-author h-card">{{name}}</span>{{/uri}}
+                {{#uri}}<a href="{{uri}}" class="p-author h-card">{{name}}</a>{{/uri}}
                 {{/author}}{{# published }}
-                <time datetime="{{iso_datetime}}">{{day}} {{month_name}} {{year}}</time>
+                <time datetime="{{iso_datetime}}" class="dt-published">{{day}} {{month_name}} {{year}}</time>
                 {{/ published }}
             </div>
-            <div class="text">
+            <div class="text e-content">
             {{{body_html}}}</div>
             <div class="more">{{#is_draft}}
                 <b class="draft">[DRAFT]</b>{{/is_draft}}{{#links_by_rel}}

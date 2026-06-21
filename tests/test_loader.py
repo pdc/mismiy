@@ -2,6 +2,8 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
+from strictyaml.exceptions import YAMLValidationError
+
 from mismiy.links import Link
 from mismiy.loader import Loader, Person, Source
 
@@ -139,6 +141,60 @@ class TestSource(TempDirMixin, unittest.TestCase):
         self.assertEqual(
             result[0].meta.get("author"),
             Person("Alice de Winter", "https://dewinter.example/alice"),
+        )
+
+    def test_allows_summary(self):
+        # Given post with summary field …
+        (self.dir_path / "2026-06-20-greet.md").write_text("""title: Hello
+summary: An exciting adventure starts here today.
+
+Hello, world!
+""")
+
+        source = Source(self.dir_path)
+        result = source.pages()
+
+        self.assertEqual(
+            result[0].meta.get("summary"),
+            "An exciting adventure starts here today.",
+        )
+
+    def test_allows_arbitrary_data(self):
+        # Given post with arbitrary YAML in the data field …
+        (self.dir_path / "2026-06-20-greet.md").write_text("""title: Recipe
+data:
+    '@context': https://schema.org/
+    '@type': Recipe
+    name: Grandma’s Deadly Cookies
+    aggregateRating:
+        '@type': AggregateRating
+        ratingValue: 4.8
+        reviewCount: 13000
+        bestRating: 5
+        worstRating: 1
+
+Hello, world!
+""")
+
+        # When loading this page …
+        source = Source(self.dir_path)
+        result = source.pages()
+
+        # Then the data is included (and all the values are treated as strings).
+        self.assertEqual(
+            result[0].meta.get("data"),
+            {
+                "@context": "https://schema.org/",
+                "@type": "Recipe",
+                "name": "Grandma’s Deadly Cookies",
+                "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "4.8",
+                    "reviewCount": "13000",
+                    "bestRating": "5",
+                    "worstRating": "1",
+                },
+            },
         )
 
     # Ordinals
@@ -332,22 +388,18 @@ class TestSource(TempDirMixin, unittest.TestCase):
 
     def test_adds_field_file_to_page_metadata(self):
         # Given a post …
-        (self.dir_path / "2026-04-12-foo.md").write_text(
-            """title: Foo
+        (self.dir_path / "2026-04-12-foo.md").write_text("""title: Foo
 author: Bob
 
 Foo
-"""
-        )
+""")
         # And a corresponding metadata file …
-        (self.dir_path / "2026-04-12-foo.figures.yaml").write_text(
-            """
+        (self.dir_path / "2026-04-12-foo.figures.yaml").write_text("""
 - id: quux
   src: quux.png
 - id: quux2
   src: quux2.png
-"""
-        )
+""")
 
         # When reading in this source …
         source = Source(self.dir_path)
@@ -362,22 +414,96 @@ Foo
             ],
         )
 
-    def test_adds_field_from_lookup_file(self):
-        # Given a post …
-        (self.dir_path / "2026-04-12-foo.md").write_text(
-            """title: Foo
+    def test_add_field_from_json_file(self):
+        (self.dir_path / "2026-06-20-foo.md").write_text("""title: Foo
 author: Bob
 
 Foo
-"""
+""")
+        # And a corresponding metadata file …
+        (self.dir_path / "2026-06-20-foo.figures.json").write_text("""
+[
+  {
+    "id": "quux",
+    "src": "quux.png"
+  },
+  {
+    "id": "quux2",
+    "src": "quux2.png"
+  }
+]
+""")
+
+        # When reading in this source …
+        source = Source(self.dir_path)
+        result = source.pages()
+
+        # Then metadata from the file is added to the page.
+        self.assertEqual(
+            result[0].meta["figures"],
+            [
+                {"id": "quux", "src": "quux.png"},
+                {"id": "quux2", "src": "quux2.png"},
+            ],
         )
+
+    def test_rejects_invalid_json(self):
+        (self.dir_path / "2026-06-20-foo.md").write_text("""title: Foo
+author: Bob
+
+Foo
+""")
+        # And a corresponding metadata file …
+        (self.dir_path / "2026-06-20-foo.figures.json").write_text("""
+[
+  {
+    "banjo": "ukelele"
+  }
+]
+""")
+
+        # Then it raises a validation exception
+        # When reading in this source.
+        source = Source(self.dir_path)
+        with self.assertRaises(YAMLValidationError):
+            source.pages()
+
+    def test_adds_field_from_lookup_file(self):
+        # Given a post …
+        (self.dir_path / "2026-04-12-foo.md").write_text("""title: Foo
+author: Bob
+
+Foo
+""")
         # And a shared metadata file …
-        (self.dir_path / "id.field.yaml").write_text(
-            """
+        (self.dir_path / "id.field.yaml").write_text("""
 2026-04-12-foo: 'urn:uuid:b41d659c-5a57-4a9c-90df-ce84631ffaa8'
 2026-04-05-bar: 'urn:uuid:ff1b608c-b5a1-49b0-952b-1e421b956782'
-"""
+""")
+
+        # When reading in this source …
+        source = Source(self.dir_path)
+        result = source.pages()
+
+        # Then metadata from the file is added to the page.
+        self.assertEqual(
+            result[0].meta["id"], "urn:uuid:b41d659c-5a57-4a9c-90df-ce84631ffaa8"
         )
+
+    def test_adds_field_from_json_lookup_file(self):
+        # Given a post …
+        (self.dir_path / "2026-06-21-foo.md").write_text("""title: Foo
+author: Bob
+
+Foo
+""")
+        # And a shared metadata file …
+        (self.dir_path / "id.field.json").write_text("""
+{
+    "2026-06-21-foo": "urn:uuid:b41d659c-5a57-4a9c-90df-ce84631ffaa8",
+    "2026-04-05-bar": "urn:uuid:ff1b608c-b5a1-49b0-952b-1e421b956782"
+}
+""")
 
         # When reading in this source …
         source = Source(self.dir_path)
@@ -442,7 +568,7 @@ class TestLoader(TempDirMixin, unittest.TestCase):
         # When we process these blogs …
         loader = Loader([dir_1, dir_2])
 
-        # Then we get a posts from post sources.
+        # Then we get posts from post sources.
         print(loader.posts())
         self.assertCountEqual(
             [x.meta["title"] for x in loader.posts()],
