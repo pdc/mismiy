@@ -462,6 +462,7 @@ The end.
                 "title": "Atomic title",
                 "published": datetime.fromisoformat("2024-05-25T00:00+01:00"),
                 "author": Person("Alice de Winter", "https://dewinter.example/alice"),
+                "summary": "Proof that 1 < 2",
             },
             "Atomic first paragraph.\n\nAtomic second paragraph.",
         )
@@ -480,7 +481,7 @@ The end.
             result.find("atom:published").text,
             "2024-05-25T00:00:00+01:00",
         )
-        # Updated same as publiushed (until we add a way to upodate it)
+        # Updated same as published (until we add a way to update it)
         self.assertEqual(
             result.find("atom:updated").text,
             "2024-05-25T00:00:00+01:00",
@@ -498,6 +499,11 @@ The end.
             '<atom:content type="html">&lt;p&gt;Atomic first paragraph.&lt;/p&gt;\n'
             "&lt;p&gt;Atomic second paragraph.&lt;/p&gt;\n"
             "</atom:content>\n",
+        )
+        # And the summary is plain text.
+        self.assertEqual(
+            result.find("atom:summary").to_string(),
+            "<atom:summary>Proof that 1 &lt; 2</atom:summary>\n",
         )
         # We assume feed.atom.xml is sibling to index.html
         self.assertEqual(

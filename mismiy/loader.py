@@ -223,6 +223,9 @@ class Page:
             for i, f in enumerate(needs_id):
                 f.id = f"fig{i + 1}"
             result["figures"] = figures
+            result["figures_by_id"] = {f.id: f for f in figures}
+        if data := self.meta.get("data"):
+            result["data_json"] = json.dumps(data, indent=4)
 
         return result
 
@@ -395,6 +398,7 @@ class Source:
                         else:
                             continue
                     page.meta["kind"] = kind
+                    page.meta["site"] = self.meta
 
                     # Add metadata from lookups
                     for field_name, field_lookup in field_lookups.items():

@@ -37,6 +37,21 @@ class TestPage(unittest.TestCase):
             },
         )
 
+    def test_includes_data_json(self):
+        page = Page(
+            "2026-06-21-hello",
+            {"title": "Hello", "data": {"@context": "https://schema.org/"}},
+            "Hello, *world*!",
+        )
+
+        result = page.context()
+
+        # Then the context includes data_json:
+        self.assertEqual(
+            result["data_json"],
+            '{\n    "@context": "https://schema.org/"\n}',
+        )
+
     def test_adds_tag_info_to_context_if_tagged(self):
         page = Page(
             "2024-05-05--hello",
@@ -82,7 +97,7 @@ class TestPage(unittest.TestCase):
             },
         )
 
-    def test_dotdotslash_if_slahes_in_name(self):
+    def test_dotdotslash_when_slahes_in_name(self):
         post = Page("2024/05/05/hello", {"title": "Hello"}, "Hello, *world*!")
 
         result = post.context()
@@ -118,6 +133,8 @@ class TestPageFigures(unittest.TestCase):
         self.assertEqual(actual.srcset, "foo.2x.png 2x, foo.3x.png 3x")
         self.assertEqual(actual.width, 480)
         self.assertEqual(actual.height, 270)
+        # And the figures are also exposed indexed by id.
+        self.assertEqual(result["figures_by_id"]["xyz"], actual)
 
     def test_renders_markdown_in_figure_caption_and_description(self):
         page = Page(

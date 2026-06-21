@@ -4,7 +4,11 @@
 
 ### Added
 
+- [Add support for resource descriptions (Open Graph, Structured Data, etc.).]
+  - New front-matter fields `summary` and `data`.
+  - Add `site`, `data_json`, `figures_by_id` to template context.
 - [Add support for external metadata.](https://mismiy.dev/2026-04-12-external-meta)
+  - Front-matter fields can be spun out in to their own files.
 - [Add support for embedding figures in pages.](https://mismiy.dev/2026-03-08-figures)
 - [Add metadata field `ordinal` to pages. This gives their position in the sequence.](https://mismiy.dev/2026-03-03-ordinal)
 - [Add option `--omit-dot-html`.](https://mismiy.dev/2025-12-23-omit-dot-html)

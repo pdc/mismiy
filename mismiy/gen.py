@@ -255,6 +255,8 @@ class Gen:
         result = Elt("atom:entry")
         result.element("atom:id", post.make_id(loader.id))
         result.element("atom:title", post.meta["title"])
+        if summary := post.meta.get("summary"):
+            result.element("atom:summary", {}, summary)
         result.element("atom:published", atom_date(post.meta["published"]))
         updated = post.meta.get("updated") or post.meta["published"]
         result.element("atom:updated", atom_date(updated))

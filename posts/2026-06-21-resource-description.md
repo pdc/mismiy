@@ -3,6 +3,8 @@ summary: Embedding and inlining information about a post in a Mismiy post.
 author: Damian Cugley
 tags:
 - RDF
+- figures
+- Mustache templates
 
 
 When I feed a [mismiy.dev] post in to Google’s [PageSpeed Insights] it says nice
@@ -14,15 +16,15 @@ lack of invisible metadata.  What can (or should) we do about this?
 ## What is page metadata good for?
 
 Search engines, social media apps and microblogging sites want to
-generate automatic link previews with an image and
-the title or summary of the site, just because this looks a lot nicer than just the URL. To create
-them, they need information like the title of the page and which image from it
+generate attractive link previews of URLs mentioned in the post, with an image and
+the title or summary of the site.
+To create them, they need information like the title of the page and which image from it
 to use in the preview—which, while it might be apparent to a human looking the
 page, can be difficult for the machine to guess.
 
 More generally, especially in more technical and academic contexts, there is
 a lot of information on the Web that could be aggregated, searched, and transformed
-in useful ways—if only the programs could identify which text on the page means what.
+in useful ways, if only the programs could identify which text on the page means what.
 
 Hence the need for machine-readable descriptions of these resources.
 
@@ -42,12 +44,13 @@ Like linking, there is a lot of academic work on metadata in theory and the prac
 applications are more limited.
 
 The terminology used in this context is _resource_ for something identified by a
-URI. We often act as if the resource _is_ the  JPEG or HTML data, but
-another way of thinking about it is that the URI
-<https://mismiy.dev/2026-05-31-metadata> identifies the Platonic ideal of this
+URL. We often act as if the resource _is_ the  JPEG or HTML data, but
+another way of thinking about it is that the URL
+<https://mismiy.dev/2026-06-21-metadata> identifies the Platonic ideal of this
 post, and the HTML is a _representation_
-of that resource. For a database-backed web site, say, the difference between the
-representation on the server and the representation downloaded to your browser may be profound.
+of that resource. For a database-backed web site, say, the representation of
+the web page in the database may be very different from the HTML representation
+you download.
 
 An image resource may have more than one representation
 (JPEG and WebP, say),
@@ -56,10 +59,21 @@ process called [content negotiation].
 (One of the simplifying assumptions with Mismiy is that we do not need this!)
 
 The W3C has been working on a framework around resource descriptions called [RDF].
-RDF links subjects (identified by URI, or in some cases _blank nodes_)
-with _properties_ (identified by URI)
+Subjects (resources) are identified by URL, which is referred to as a URI (uniform resource identifier)
+in this context, or can be _blank nodes_ (with temporary URIs).
+The resource description consists of _properties_ (identified by URI)
 whose values are another resource (identified by URI) or a scalar value
-(string, number, date, boolean).
+(string, number, date, boolean). For example
+
+> Some properties of the fictional resource `https://apples.example/2020-10-01/apple-pie-by-grandma`:
+>
+>  | Property | Value
+>  | --- | ---
+>  | `http://www.w3.org/1999/02/22-rdf-syntax-ns#type` | `http://schema.org/Recipe`
+>  | `https://schema.org/name`  |  `Apple Pie by Grandma`
+>  | `https://schema.org/author`  |  `Elaine Smith`
+>  | `https://schema.org/description`  |  `A classic apple pie`
+
 The fact that properties are identified by URI allows for descriptions
 from different providers to be combined without name collisions.
 Making this work entails URIs for people, places, languages, everything.
@@ -83,8 +97,8 @@ ivory-tower academia.
 Given a web page, how do you find its description? The three main ways to provide
 this metadata are:
 
-1. External (or alternative) resources, where the metadata is downloaded separately;
-2. Metadata  embedded in the HTML of the web page; and
+1. External (or alternative) representations, where the metadata is downloaded separately;
+2. The metadata is embedded in the HTML of the web page; and
 3. Tagging information already visible on the page.
 
 
@@ -116,18 +130,17 @@ The last of these is a clever application of JSON. It can look like this:
 ```
 
 Ignoring the `@context`, `@id` and `@type` fields, this looks like a straightforward
-JSON representation of a recipe on a recipe web site built in single-page-application
+JSON representation of a recipe on some recipe web site built in single-page-application
 style.
 
-A JSON-LD processor uses the `@context` field to expand this to  in to RDF clauses.
-So, for example, the the subject identified by `https://apples.example/2020-10-01/apple-pie-by-grandma`
-has property `https://schema.org/name` with value `Apple Pie by Grandma`.
+A JSON-LD processor uses the `@context` field to expand this to  in to RDF clauses
+like those in the table above.
 Expanding from JSON to RDF is useful when we want to absorb the data in to a
-general-purpose RDF processor for later querying, say. You can experiment with this
+general-purpose RDF processor for later querying. You can experiment with this
 in the [JSON-LD Playground].
 
-Given a hypothetical web page <https://apples.example/2020-10-01/apple-pie-by-grandma>,
-how does one find this resource? One option is [content negotiation]: the application
+Given our fictional URI `https://apples.example/2020-10-01/apple-pie-by-grandma`,
+how does one find the metadata resource? One option is [content negotiation]: the application
 makes an HTTP request with headers saying it would prefer JSON-LD to HTML, and
 the server provides this alternative representation. Another is that the HTML at that
 address may have a link header or tag (as discussed in [the prev-next post]) with `rel=alternative`.
@@ -141,10 +154,8 @@ The HTML standard defines some specific elements such as `title`. It also define
 the page they are in. For example,
 
 ```html
-<title>Apple Pie by Grandma – Apple Marketing Board</title>
-<meta name="description" content="A rambling travelogue about my Grandma’s
-village in Brittany and my relationship with her and her new wife, concluding
-with an outline of her approach to making a classic apple pie.">
+<title>Apple Pie by Grandma – Elaine’s Apple a Day</title>
+<meta name="description" content="A classic apple pie.">
 ```
 
 Facebook has defined a vocabulary called Open Graph which is embedded in HTML with
@@ -152,23 +163,22 @@ Facebook has defined a vocabulary called Open Graph which is embedded in HTML wi
 
 ```html
 <meta property="og:title" content="Apple pie by Grandma">
-<meta property="og:description" content="Reminiscences of my grandma
-and her approach to making a classic apple pie.">
+<meta property="og:description" content="A classic apple pie.">
 <meta property="og:image" content="https://apples.example/applepie.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="https://apples.example/2020-10-01/apple-pie-by-grandma">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Apple Marketing Board">
+<meta property="og:site_name" content="Elaine’s Apple a Day">
 <meta property="og:locale" content="en_AU">
 ```
 
 They eccentrically use an attribute named `property` instead of `name`,
 and the language tag has an underscore instead of hyphen-minus. But everyone
-wants their page to look good on Facebook so it’s a de facto standard now.
+wants their page to look good on Facebook so it’s a _de facto_ standard now.
 You are supposed to add a `prefix="og: https://ogp.me/ns#"` attribute
 as well, which in principle allows the description to be extracted as
-RDF using conventions of  [RDFa].
+RDF using conventions of [RDFa].
 
 HTML also allows for files to be embedded in pages as `script` elements.
 Usually the related resource is executable JavaScript code, but it can be
@@ -313,6 +323,7 @@ So you might want to have something like this:
 
 Most of this can be achieved by simple additions to our post templates.
 
+
 ## How Mismiy can help
 
 First, if we want to support generic templates then passing in the site metadata
@@ -453,6 +464,7 @@ even though there are more than one way to express the same RDF information in
 JSON-LD format. Mismatches will be hard to spot, unless they cause the visible
 part of the page to look odd.
 
+
 ## In summary
 
 (1) New fields that can be defined in post metadata:
@@ -462,16 +474,18 @@ part of the page to look odd.
 
 The first of these will be added to Atom feeds, assuming that does not break anything.
 
-(2) New format for external metadata – you can provide JSON-LD in a file named
+(2) New format for external metadata, so we can provide JSON-LD in a file named
 after the post plus `.data.json`.
 
 (3) New values in the template context:
 
-- `site` – information from the `META.yaml` file, including `title` the site name;
-- `data`, `data_json` – the data field converted to JSON; and
+- the new fields `data` and `summary`;
+- `data_json` – the data field converted to JSON;
+- `site` – information from the `META.yaml` file, including `title` the site name; and
 - `figures_by_id` – allows inserting information about a specific figure.
 
-
+Of these most authors need only bother adding `summary`, and only when the default
+of the first few words of the main content is not satisfactory.
 
 
 [Atom Syndication Format]: https://datatracker.ietf.org/doc/html/rfc4287

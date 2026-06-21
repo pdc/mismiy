@@ -228,16 +228,27 @@ code {
 table {
     margin: var(--vsmall) 0 var(--vgap) var(--indent);
     border-collapse: collapse;
+
+    thead tr:last-child th {
+        padding-bottom: 0.25lh;
+        border-bottom: 1px solid;
+    }
+
+    tbody tr:first-child td {
+        padding-top: 0.5lh;
+    }
 }
 
 td,
 th {
     text-align: left;
     vertical-align: baseline;
+    padding-block-start: 0.125lh;
+    padding-block-end: 0.125lh;
 }
 
 td+td,
-th+td {
+th+th {
     padding-left: 0.5em;
 }
 

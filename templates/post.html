@@ -1,14 +1,9 @@
 <!DOCTYPE html>
 <html lang=en>
     <head>
-        <meta charset=UTF-8>
-        <title>{{#title}}{{.}} – {{/title}}Mismiy</title>
-        {{#summary}}<meta name="description" content="{{.}}">{{/summary}}
-        <meta property="og:title" content="{{title}}">
-        <meta property="og:site_name" content="Mismiy">
+        {{>head.html}}
         <meta property="og:type" content="article">
 
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <style>
             {{> inline.css }}
 
@@ -69,9 +64,7 @@
                     width: 12em;
                 }
             }
-        </style>{{#links}}
-        <link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>
-        {{/links}}
+        </style>
     </head>
     <body>
         {{> header.html }}
@@ -91,13 +84,15 @@
             <div class="text e-content">
             {{{body_html}}}</div>
             <div class="more">{{#is_draft}}
-                <b class="draft">[DRAFT]</b>{{/is_draft}}{{#links_by_rel}}
+                <b class="draft">[DRAFT]</b>{{/is_draft}}
+                {{#links_by_rel}}
                 <nav class="links">
                     <ul>{{#next}}
                         <li>Next post: <a href={{href}}>{{title}}</a></li>{{/next}}{{#prev}}
                         <li>Previous post: <a href={{href}}>{{title}}</a></li>{{/prev}}
                     </ul>
-                </nav>{{/links_by_rel}}
+                </nav>
+                {{/links_by_rel}}
                 {{>tags.html}}
             </div>
 

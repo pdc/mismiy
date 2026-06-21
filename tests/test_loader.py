@@ -197,6 +197,23 @@ Hello, world!
             },
         )
 
+    def test_includes_backlink_to_site(self):
+        # Given post with summary field …
+        (self.dir_path / "META.yaml").write_text("title: Amazing website")
+        (self.dir_path / "2026-06-20-greet.md").write_text("""title: Hello
+summary: An exciting adventure starts here today.
+
+Hello, world!
+""")
+
+        source = Source(self.dir_path)
+        result = source.pages()
+
+        self.assertEqual(
+            result[0].meta.get("site")["title"],
+            "Amazing website",
+        )
+
     # Ordinals
 
     def test_adds_ordinals(self):
