@@ -4,7 +4,7 @@
 
 ### Added
 
-- [Add support for resource descriptions (Open Graph, Structured Data, etc.).]
+- [Add support for resource descriptions (Open Graph, Structured Data, etc.).](https://mismiy.dev/2026-06-21-resource-description)
   - New front-matter fields `summary` and `data`.
   - Add `site`, `data_json`, `figures_by_id` to template context.
 - [Add support for external metadata.](https://mismiy.dev/2026-04-12-external-meta)
