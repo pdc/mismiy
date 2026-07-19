@@ -7,7 +7,6 @@ from mismiy.mustache_utils import as_date_lambda, as_duration_lambda, expand_dat
 
 
 class TestAsDate(unittest.TestCase):
-
     # These tests call the lambda function with a parameter that us the content
     # of the tag, a partial template, and a mocked render function.
 
@@ -55,6 +54,21 @@ class TestAsDate(unittest.TestCase):
     def test_expands_year(self):
         # Given the data has a date value that is just the year …
         render = MagicMock(side_effect=["2026", "*rendered*"])
+
+        result = as_date_lambda("*partial*", render)
+
+        # Then the partial template is rendered with just the year provided.
+        render.assert_has_calls(
+            [
+                call("{{.}}"),
+                call("*partial*", {"year": 2026}),
+            ]
+        )
+        self.assertEqual(result, "*rendered*")
+
+    def test_expands_year_when_int(self):
+        # Given the data has a date value that is just the year …
+        render = MagicMock(side_effect=[2026, "*rendered*"])
 
         result = as_date_lambda("*partial*", render)
 

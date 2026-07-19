@@ -19,7 +19,7 @@ def expand_date(d: datetime | date) -> Mapping[str, str]:
     }
 
 
-year_re = re.compile(r"\d{4}")
+year_re = re.compile(r"^\d{4}$")
 
 
 def as_date_lambda(text: str, render: Callable) -> str:
@@ -29,16 +29,17 @@ def as_date_lambda(text: str, render: Callable) -> str:
     """
     # Get the date value:
     value = render("{{.}}")
-    if isinstance(value, int) or year_re.match(value):
+    if isinstance(value, int):
         # It’s just a year.
+        data = {"year": value}
+    elif isinstance(value, (date, datetime)):
+        data = expand_date(value)
+    elif year_re.match(value):
         data = {"year": int(value)}
-    elif isinstance(value, str):
-        value = (
-            datetime.fromisoformat(value) if "T" in value else date.fromisoformat(value)
-        )
-        data = expand_date(value)
+    elif "T" in value:
+        data = expand_date(datetime.fromisoformat(value))
     else:
-        data = expand_date(value)
+        data = expand_date(date.fromisoformat(value))
 
     # Now render the section text with the expanded date.
     return render(text, data)
