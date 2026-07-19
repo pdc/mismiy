@@ -1,0 +1,25 @@
+{
+    "@context": "https://schema.org/",
+    "@type": "Article",
+    "about": {
+        "@type": "Movie",
+        "@id": "https://vimeo.com/161251124",
+        "isPartOf": {
+            "@type": "MovieSeries",
+            "name": "Star Trek: Intrepid"
+        },
+        "name": "Nemo Me Impune Lacessit",
+        "countryOfOrigin": {
+            "@type": "Country",
+            "name": "Scotland"
+        },
+        "datePublished": "2016",
+        "duration": "PT11M10S",
+        "thumbnail": {
+            "@type": "ImageObject",
+            "contentUrl": "https://i.ytimg.com/vi/roA_juaWPtI/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+        }
+    }
+}

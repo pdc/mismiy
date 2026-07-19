@@ -1,0 +1,25 @@
+ <aside class="sidebar">
+    <h2>Sidebar</h2>
+    {{#@id}}<a href="{{.}}"><cite>{{name}}</cite></a>{{/@id}}
+    {{^@id}}<cite>{{name}}</cite>{{/@id}}
+    {{#isPartOf}}
+    <div><em>{{name}}</em> episode</div>
+    {{/isPartOf}}
+    {{#thumbnail}}
+    <img src="{{contentUrl}}" alt="thumbnail"{{#width}} width="{{.}}"{{/width}}{{#height}} height="{{.}}"{{/height}}>
+    {{/thumbnail}}
+    <dl>
+        {{#duration}}
+        <dt>Duration</dt>
+        <dd><time datetime={{.}}>{{#as_duration}}{{#minutes}}{{.}} min{{/minutes}}{{/as_duration}}</time></dd>
+        {{/duration}}
+        {{#datePublished}}
+        <dt>Released</dt>
+        <dd><time datetime="{{.}}">{{#as_date}}{{year}}{{/as_date}}</time></dd>
+        {{/datePublished}}
+        {{#countryOfOrigin}}
+        <dt>Made in</dt>
+        <dd>{{name}}</dd>
+        {{/countryOfOrigin}}
+    </dl>
+</aside>

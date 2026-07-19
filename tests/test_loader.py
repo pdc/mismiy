@@ -533,7 +533,7 @@ Foo
 
 
 class TestLoader(TempDirMixin, unittest.TestCase):
-    """Loader wraps oneor mor sources."""
+    """Loader wraps one or more sources."""
 
     def test_recognizes_markdown_and_md_files(self):
         # Given a 1 directories with 2 pages in …
@@ -586,7 +586,6 @@ class TestLoader(TempDirMixin, unittest.TestCase):
         loader = Loader([dir_1, dir_2])
 
         # Then we get posts from post sources.
-        print(loader.posts())
         self.assertCountEqual(
             [x.meta["title"] for x in loader.posts()],
             ["Marzipan"],

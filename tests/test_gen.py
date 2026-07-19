@@ -164,6 +164,47 @@ The end.
 """,
         )
 
+    def test_render_page_with_data_with_date(self):
+        # Given a page that defines data and renders it …
+        self.add_page(
+            "foo",
+            """title: Foo Title
+data:
+    name: Sir David Attenborough
+    birthday: 1926-05-08
+
+Let me tell you a story …
+""",
+        )
+        self.add_tpl(
+            "page.html",
+            """
+<h1>{{title}}</h1>
+{{{body_html}}}
+{{#data}}
+<p>
+{{name}}, born {{#birthday}}{{#as_date}}{{day}} {{month_name}} {{year}}{{/as_date}}{{/birthday}}
+</p>
+{{/data}}
+""",
+        )
+
+        gen = Gen(self.tpl_dir)
+        gen.render_pages(self.loader, self.pub_dir)
+
+        html_path = self.pub_dir / "foo.html"
+        self.assertEqual(
+            html_path.read_text(),
+            """
+<h1>Foo Title</h1>
+<p>Let me tell you a story …</p>
+
+<p>
+Sir David Attenborough, born 8 May 1926
+</p>
+""",
+        )
+
     def test_renders_index_page(self):
         self.add_post("2024-05-05-hello", "title: Hello\n\nHello, World!")
         self.add_post("2024-05-06-hello", "title: Greetings\n\nGreetings, World!")

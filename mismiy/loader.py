@@ -1,5 +1,4 @@
 import json
-import locale
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -28,6 +27,7 @@ from strictyaml import (
 from strictyaml import load as yaml_load
 
 from .links import Link, munged, url_relative_to
+from .mustache_utils import expand_date
 from .tagging import Tagging
 from .xml import Elt
 
@@ -284,20 +284,6 @@ class Page:
     @classmethod
     def from_file(cls, name: str, file: Path, tz: tzinfo) -> "Page":
         return cls.from_text(name, file.read_text(encoding="UTF-8"), tz)
-
-
-def expand_date(d: datetime | date) -> Mapping[str, str]:
-    month_name = locale.nl_langinfo(getattr(locale, f"MON_{d.month}"))
-    return {
-        "year": str(d.year),
-        "month": str(d.month),
-        "month_2digits": "%02d" % d.month,
-        "month_name": month_name,
-        "day": str(d.day),
-        "day_2digits": "%02d" % d.day,
-        "iso_date": d.date().isoformat(),
-        "iso_datetime": d.isoformat(),
-    }
 
 
 class Source:

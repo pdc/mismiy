@@ -3,7 +3,6 @@
     <head>
         {{>head.html}}
         <meta property="og:type" content="article">
-
         <style>
             {{> inline.css }}
 
@@ -93,7 +92,8 @@
                     </ul>
                 </nav>
                 {{/links_by_rel}}
-                {{>tags.html}}
+                {{#has_tags}}{{>tags.html}}{{/has_tags}}
+                {{#data.about}}{{>data_about.html}}{{/data.about}}
             </div>
 
             {{#has_figures}}

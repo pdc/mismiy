@@ -12,6 +12,7 @@ from chevron import render
 
 from .links import Link, munged
 from .loader import Figure, Loader, Page, datetime_naïve
+from .mustache_utils import as_date_lambda, as_duration_lambda
 from .tagging import Tagging
 from .xml import Doc, Elt
 
@@ -143,7 +144,7 @@ class Gen:
         context: dict[str, Any],
         tpl_name: str = None,
     ):
-        more_context = {}
+        more_context = {"as_date": as_date_lambda, "as_duration": as_duration_lambda}
         # Add has_foo for all lists to facilitate existence checks.
         for k, v in context.items():
             if isinstance(v, Sequence) and not isinstance(v, (str, bytes)):

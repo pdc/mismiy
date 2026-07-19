@@ -114,6 +114,46 @@ body>header {
         }
     }
 
+    & aside {
+        margin-top: 2lh;
+        border-top: 1px dotted;
+
+        h2 {
+            font-size: inherit;
+            font-variant-caps: all-small-caps;
+            font-weight: normal;
+
+            margin-top: 0;
+        }
+
+        cite {
+            display: block;
+            font-size: 16px;
+            line-height: 1.25;
+            font-weight: 500;
+        }
+
+        img {
+            display: block;
+            margin: 0.5lh 0;
+            width: 100%;
+            height: auto;
+        }
+
+        dl {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            column-gap: 1em;
+            row-gap: 0;
+        }
+
+        dt,
+        dd {
+            margin: 0;
+            padding: 0;
+        }
+    }
+
     & nav.tags ul {
         margin: 0;
         padding: 0;
@@ -210,6 +250,12 @@ body>header {
         font-size: 1.25em;
         font-weight: 600;
         margin: 2em 0 1em;
+    }
+
+    & h3 {
+        font-size: 1.125em;
+        font-weight: 400;
+        margin: 1em 0 0.5em;
     }
 
     & strong {
