@@ -29,6 +29,8 @@ def as_date_lambda(text: str, render: Callable) -> str:
     """
     # Get the date value:
     value = render("{{.}}")
+    # Since we are using this on data parsed by StrictYaml, in practice this
+    # value will be a string, but let’s allow for actual values for future-proofing.
     if isinstance(value, int):
         # It’s just a year.
         data = {"year": value}
