@@ -4,6 +4,7 @@
 
 ### Added
 
+- [Add support for icon and logo in Atom feed.](https://mismiy.dev/2026-07-26-icons)
 - [Add lambdas for date and duration parsing in templates.](https://mismiy.dev/2026-07-19-lambdas)
 - [Add support for resource descriptions (Open Graph, Structured Data, etc.).](https://mismiy.dev/2026-06-21-resource-description)
   - New front-matter fields `summary` and `data`.

@@ -1,0 +1,6 @@
+<svg  xmlns="http://www.w3.org/2000/svg" version="1.1"  viewBox="-72 -72 144 144" width="144px" height="144px">
+    <path fill="#FFF" stroke="#000" stroke-width="4" d="M0,-70 q70,0 70,70 0,70 -70,70 -70,0 -70,-70 0,-70 70,-70z "/>
+    <g transform="scale(1.125,1.125)">
+        <path fill="none" stroke="#000" stroke-width="4" d="M-35,36 v-72 l35,56 35,-56 v72"/>
+    </g>
+</svg>

@@ -44,7 +44,6 @@ person_schema = Str() | Map(
     }
 )
 
-
 figure_schema = Map(
     {
         Optional("id"): Str() | Int(),
@@ -74,6 +73,8 @@ meta_schema = Map(
         Optional("title"): Str(),
         Optional("id"): Str(),
         Optional("url"): Url(),
+        Optional("icon"): Url(),  # Rarely used Atom field
+        Optional("logo"): Url(),  # Even more rarely used Atom element
         Optional("tz"): Str(),
         Optional("kind"): Enum(["post", "page"]),
     }
@@ -322,6 +323,14 @@ class Source:
         return self.meta["url"]
 
     @property
+    def icon(self):
+        return self.meta.get("icon")
+
+    @property
+    def logo(self):
+        return self.meta.get("logo")
+
+    @property
     def meta(self):
         """Metadata about the blog as a whole."""
         if self._meta is None:
@@ -503,6 +512,20 @@ class Loader:
         """URL that is the base of the blog, used to generate links to posts."""
         for source in self.sources:
             if result := source.url:
+                return result
+
+    @property
+    def icon(self):
+        """URL of a square image for inclusion in the Atom feed."""
+        for source in self.sources:
+            if result := source.icon:
+                return result
+
+    @property
+    def logo(self):
+        """URL of a rectangular (2:1) image for inclusion in the Atom feed."""
+        for source in self.sources:
+            if result := source.logo:
                 return result
 
     def flush(self):

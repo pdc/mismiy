@@ -207,6 +207,10 @@ class Gen:
         # Feed metadata comes first
         doc.element("atom:id", {}, loader.id)
         doc.element("atom:title", {}, loader.title)
+        if src := loader.icon:
+            doc.element("atom:icon", {}, src)
+        if src := loader.logo:
+            doc.element("atom:logo", {}, src)
         if url := loader.url:
             self_href = urljoin(url, self.feed_href(page))
             doc.attrs["xml:base"] = self_href

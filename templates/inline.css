@@ -200,9 +200,8 @@ body>header {
 .text {
     font-family: var(--text);
     line-height: 1.5;
-    padding-bottom: var(--vgap);
-    border-bottom: 1px dotted;
-    margin-bottom: var(--vgap);
+
+    margin-bottom: calc(3 * var(--vgap));
 
     & p {
         margin-top: 0;

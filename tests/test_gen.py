@@ -18,6 +18,8 @@ class TestGen(TempDirMixin, unittest.TestCase):
             "title: Test blog\n"
             "url: https://mismiy.example/test/\n"
             "tz: Europe/London\n"
+            "icon: https://mismiy.text/icon.png\n"
+            "logo: https://mismiy.text/logo.png\n"
         )
 
         self.pages_dir = self.dir_path / "pages"
@@ -379,7 +381,7 @@ Sir David Attenborough, born 8 May 1926
             "</ul>\n",
         )
 
-    def test_renders_tagged_page_sansd_dot_html(self):
+    def test_renders_tagged_page_sans_dot_html(self):
         # Given same setup as previous test …
         self.add_post(
             "2024-05-05-hello", "title: Hello\ntags:\n- greeting\n\nHello, World!"
@@ -597,6 +599,9 @@ Sir David Attenborough, born 8 May 1926
         self.assertEqual(result.find("atom:id").text, self.loader.id)
         self.assertEqual(result.find("atom:title").text, self.loader.title)
         self.assertEqual(result.find("atom:updated").text, "2024-05-26T00:00:00+01:00")
+        # And it has optional Atom feed elements.
+        self.assertEqual(result.find("atom:icon").text, "https://mismiy.text/icon.png")
+        self.assertEqual(result.find("atom:logo").text, "https://mismiy.text/logo.png")
         # And contains entries in reverse chronological order.
         self.assertEqual(
             [
