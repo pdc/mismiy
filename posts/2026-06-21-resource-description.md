@@ -3,6 +3,7 @@ summary: Embedding and inlining information about a post in a Mismiy post.
 author: Damian Cugley
 tags:
 - RDF
+- images
 - figures
 - Mustache templates
 
