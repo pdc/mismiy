@@ -7,6 +7,9 @@
         longdesc="#{{id}}-desc"{{/description}}>{{#caption}}
     <figcaption>
        {{{caption_html}}}{{#description}}
-       <a href="#{{id}}-desc" class="desc-link">[Image description]</a>{{/description}}
+       <details>
+            <summary>Image description</summary>
+            <p id="#{{id}}-desc">{{.}}</p>
+        </details>{{/description}}
     </figcaption>{{/caption}}
 </figure>

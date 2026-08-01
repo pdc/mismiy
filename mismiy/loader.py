@@ -218,17 +218,25 @@ class Page:
         )
         if tagging and (tag_infos := tagging.page_tags(self)):
             result["tags"] = tag_infos
-        if figure_specs := self.meta.get("figures"):
-            figures = [Figure.from_spec(spec) for spec in figure_specs]
-            needs_id = [f for f in figures if not f.id]
-            for i, f in enumerate(needs_id):
-                f.id = f"fig{i + 1}"
+        if figures := self.resolve_figures():
             result["figures"] = figures
             result["figures_by_id"] = {f.id: f for f in figures}
         if data := self.meta.get("data"):
             result["data_json"] = json.dumps(data, indent=4)
 
         return result
+
+    def resolve_figures(self):
+        """Return Figure instances.
+
+        The figures will all have ids, even if none was originally supplied.
+        """
+        if figure_specs := self.meta.get("figures"):
+            figures = [Figure.from_spec(spec) for spec in figure_specs]
+            needs_id = [f for f in figures if not f.id]
+            for i, f in enumerate(needs_id):
+                f.id = f"fig{i + 1}"
+            return figures
 
     def reference(self, tagging: Tagging = None, *, omit_dot_html=False):
         """Just enough context for the link to this page."""

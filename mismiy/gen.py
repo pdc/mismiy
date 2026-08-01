@@ -162,15 +162,8 @@ class Gen:
                         print(e)
 
         if figures := context.get("figures"):
-            # Replace figures with rendered template.
-            # First, make a regexp that matches image tags that reference figures.
-            ids = "|".join(f.id for f in figures)
-            figure_re = re.compile(
-                rf'<p><img src="(?P<src>{ids})" alt="(?P<alt>[^"]*)" /></p>\n'
-            )
-            # Now replace them with rendering of the figure template.
-            body_html = figure_re.sub(
-                partial(self._render_figure, figures), context["body_html"]
+            body_html = self._render_figures(
+                figures, "figure.html", context["body_html"]
             )
             more_context["body_html"] = body_html
 
@@ -182,7 +175,24 @@ class Gen:
         )
         out_file.write_text(html, encoding="UTF-8")
 
-    def _render_figure(self, figures: list[Figure], m: re.Match[str]) -> str:
+    def _render_figures(
+        self, figures: list[Figure], template_name: str, body_html: str
+    ) -> str:
+        # Replace figures with rendered template.
+        # First, make a regexp that matches image tags that reference figures.
+        ids = "|".join(f.id for f in figures)
+        figure_re = re.compile(
+            rf'<p><img src="(?P<src>{ids})" alt="(?P<alt>[^"]*)" /></p>\n'
+        )
+        # Now replace them with rendering of the figure template.
+        body_html = figure_re.sub(
+            partial(self._render_figure, figures, template_name), body_html
+        )
+        return body_html
+
+    def _render_figure(
+        self, figures: list[Figure], template_name: str, m: re.Match[str]
+    ) -> str:
         """Function giving the substitution for a regex match against a figure."""
         figure_id = m["src"]
         figure = next(f for f in figures if f.id == figure_id)
@@ -190,7 +200,7 @@ class Gen:
         if alt_text := m["alt"]:
             figure.alt = alt_text
         return render(
-            self.templates["figure.html"], figure, partials_dict=self.templates
+            self.templates[template_name], figure, partials_dict=self.templates
         )
 
     def _atom_feed(self, loader: Loader, page: int) -> Doc:
@@ -270,7 +280,10 @@ class Gen:
         result.element(
             "atom:link", {"rel": "alternate", "type": "text/html", "href": post.href}
         )
-        result.element("atom:content", {"type": "html"}, post.body_html())
+        body_html = post.body_html()
+        if figures := post.resolve_figures():
+            body_html = self._render_figures(figures, "atom_figure.html", body_html)
+        result.element("atom:content", {"type": "html"}, body_html)
         return result
 
     def feed_href(self, page):

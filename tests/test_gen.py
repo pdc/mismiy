@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime
+from textwrap import dedent
 
 from mismiy.gen import Gen
 from mismiy.loader import Loader, Page, Person
@@ -13,14 +14,14 @@ class TestGen(TempDirMixin, unittest.TestCase):
 
         self.posts_dir = self.dir_path / "posts"
         self.posts_dir.mkdir()
-        (self.posts_dir / "META.yaml").write_text(
-            "id: tag:alleged.org.uk,2024:mismiy:test\n"
-            "title: Test blog\n"
-            "url: https://mismiy.example/test/\n"
-            "tz: Europe/London\n"
-            "icon: https://mismiy.text/icon.png\n"
-            "logo: https://mismiy.text/logo.png\n"
-        )
+        (self.posts_dir / "META.yaml").write_text(dedent("""
+            id: tag:alleged.org.uk,2024:mismiy:test
+            title: Test blog
+            url: https://mismiy.example/test/
+            tz: Europe/London
+            icon: https://mismiy.text/icon.png
+            logo: https://mismiy.text/logo.png
+            """))
 
         self.pages_dir = self.dir_path / "pages"
         self.pages_dir.mkdir()
@@ -611,6 +612,33 @@ Sir David Attenborough, born 8 May 1926
             ],
             ["Fabulous", "Drafty"],
         )
+
+    def test_renders_figures_in_atom_feed(self):
+        self.add_post(
+            "2026-08-01-so",
+            dedent("""
+                title: My happy post
+                figures:
+                - id: xyzzy
+                  src: /i/x.png
+
+                Joy!
+
+                ![Plugh](xyzzy)
+
+                Happiness!
+                """),
+        )
+        self.add_tpl("atom_figure.html", '<img src="{{src}}" alt="{{alt}}">')
+
+        gen = Gen(self.tpl_dir)
+        result = gen._atom_feed(self.loader, page=1)
+
+        # Then the image tag has been expanded to include URL from front matter.
+        entry_content = (
+            result.find("atom:entry").find("atom:content", {"type": "html"}).text
+        )
+        self.assertIn('<img src="/i/x.png" alt="Plugh">', entry_content)
 
     # TODO Can create atom feed even if all the meta is omitted.
 

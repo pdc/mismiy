@@ -68,9 +68,11 @@ class Config:
                 args.templates_dir or defaults.get("templates_dir") or "templates"
             ),
             out_dir=Path(args.out_dir or defaults.get("out_dir") or "pub"),
-            omit_dot_html=args.omit_dot_html
-            if args.omit_dot_html is not None
-            else defaults.get("omit_dot_html") or False,
+            omit_dot_html=(
+                args.omit_dot_html
+                if args.omit_dot_html is not None
+                else defaults.get("omit_dot_html") or False
+            ),
             locale=args.locale or defaults.get("locale") or "",
         )
 

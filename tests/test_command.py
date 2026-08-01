@@ -42,18 +42,16 @@ class TestConfig(TempDirMixin, unittest.TestCase):
         self.assertEqual(config.locale, "")
 
     def test_reads_config_file(self):
-        (self.dir_path / "mismiy-config.yaml").write_text(
-            dedent("""
-                pages_dirs:
-                    - eggs
-                    - bits
-                templates_dir: tp
-                static_dir: web
-                out_dir: out
-                omit_dot_html: true
-                locale: en_DE.utf-16
-                """)
-        )
+        (self.dir_path / "mismiy-config.yaml").write_text(dedent("""
+            pages_dirs:
+                - eggs
+                - bits
+            templates_dir: tp
+            static_dir: web
+            out_dir: out
+            omit_dot_html: true
+            locale: en_DE.utf-16
+            """))
 
         with working_dir(self.dir_path):
             config = command.Config.from_arguments(NO_ARGS)
@@ -66,18 +64,16 @@ class TestConfig(TempDirMixin, unittest.TestCase):
         self.assertEqual(config.locale, "en_DE.utf-16")
 
     def test_gives_precedence_to_args(self):
-        (self.dir_path / "mismiy-config.yaml").write_text(
-            dedent("""
-                    pages_dirs:
-                        - pages
-                        - posts
-                    templates_dir: tp
-                    static_dir: web
-                    out_dir: out
-                    omit_dot_html: true
-                    locale: en_DE.utf-16
-                    """)
-        )
+        (self.dir_path / "mismiy-config.yaml").write_text(dedent("""
+            pages_dirs:
+                - pages
+                - posts
+            templates_dir: tp
+            static_dir: web
+            out_dir: out
+            omit_dot_html: true
+            locale: en_DE.utf-16
+            """))
 
         with working_dir(self.dir_path):
             os.chdir(self.dir_path)
