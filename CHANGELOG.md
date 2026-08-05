@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased changes]
+## 0.2.0 (2026-08-05)
 
 ### Added
 
@@ -36,3 +36,4 @@
 
 
 [0.1.0]: https://github.com/pdc/mismiy/releases/tag/0.1.0
+[0.2.0]: https://github.com/pdc/mismiy/releases/tag/0.2.0
