@@ -61,7 +61,7 @@ The file name is used in the URL of the post, with the `.md` or `.markdown` suff
 replaced by `.html`.
 The index pages list the posts in alphabetical order by file name. The usual convention
 is to start the file name with the date in ISO format. For example, `2025-07-22-british-pi-day.md`,
-or by create subdirectories so your posts have file names like `2025/07/22/british-pi-day.md`.
+or by creating subdirectories so your posts have file names like `2025/07/22/british-pi-day.md`.
 
 ## Post metadata
 
@@ -95,6 +95,9 @@ based on the name of the file.
 The `updated` field the date and optionally the time the post was last modified
 in a meaningful way, such as adding a correction or more information. There is no need to set
 the `updated` field after merely adjusting whitespace or correcting a simple misspelling.
+
+An optional `summary` field should be a plain-text summary of the post. It will be
+made available in the Atom feed. It can also be used in page templates.
 
 You can provide `tags` field to classify posts by subject in some way. Extra index
 pages will be generated listing pages associated with a given tag. The tags are provided
@@ -137,10 +140,19 @@ The `caption` field is optional; it supplies text that goes next to the figure.
 An optional `description` field supplies a long description of the appearance of
 the figure.
 
-All of the fields are optional except `title`.
+An arbitrary structured data blob may be supplied as `data`. This can be used to
+provide machine-readable data about the subject of the page (for example, a
+review might have a summary of some data about the item being reviewed). It
+can be embedded in the page via the page templates.
 
-- Technical aside: The metadata is parsed using [Strict Yaml], a less-confusing subset
+All of the fields are optional except `title`. The metadata is parsed using [Strict Yaml], a less-confusing subset
 of the full YAML language.
+
+A field from a post can be supplied as a parallel file. The file name is the same
+as the post, minus the `.md` suffix, plus the field name and `.yaml`. For example,
+given a post `2026/08/05/cats.md`, the value for the `figures` field could go in
+a file `2026/08/05/cats.figures.yaml`. This can be useful for fields that are
+automatically generated.
 
 ## Blog metadata
 
@@ -152,6 +164,8 @@ title: Lilliput Tourism Guide
 url: https://tourism.lilliput.example/blog/
 id: https://tourism.lilliput.example/blog/
 tz: Lilliput/Mildendo
+icon: /logo-square-144.png
+logo: /logo-wide-80.png
 ```
 
 The following fields are all optional.
@@ -169,6 +183,9 @@ If the `url` field is known, it is often a reasonable choice for `id`.
 Specify the time zone to be used for dates with the `tz` field. This uses the
 uniform naming convention of the [tz database], which looks like `Europe/Paris`,
 `America/New_York`, and so on. It is used when writing timestamps in to the Atom feed.
+
+The `icon` and `logo` fields are both optional URLs of images to use in the Atom
+feed to identify the blog. The `icon` image is expected to be square.
 
 There are two sorts of page in the Mismiy system: regular pages and posts.
 The convention is that Markdown files in the `posts` directory are posts, and
@@ -207,7 +224,7 @@ When rendering a page the template named for the kind of page is used:
 The other files, like `header.html` and `inline.css` are partial templates
 (partials) referenced from the other templates.
 
-The special template `figure.html` is used for rendering figures.
+The special templates `figure.html` and `atom_figure.html` are used for rendering figures.
 
 The context for a page or post template includes the following:
 
@@ -221,9 +238,16 @@ Key | Value
 `published` | A date object, as described below
 `tags` | If this page has tags, then a list of tag objects with `label`, `href`, and `count` fields
 `updated` | A date object, as described below, or null
+`summary` | Plain-text summary of the page, if supplied.
+`data` | Structured data for the page, if supplied.
+`data_json` | The `data` field, formatted as JSON.
 `links` | List of objects with `rel`, `href`, optional `title` and optional `type`
 `links_by_rel` | The same link objects, but indexed by their `rel` value
 `figures` | Normalized metadata about figures in the page
+`figures_by_id` | The figures data, indexed by `id` value.
+`ordinal` | The position of this post within the sequence of posts.
+`as_date` | A lambda that interprets the context as a date and adds a date object to the context (as table below).
+`as_duration` | A lambda that interprets the context as an ISO duration literal and adds an object to the context.
 
 Date objects are a halfway house to proper localization of dates. They contain
 the following fields:
