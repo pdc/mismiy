@@ -1,6 +1,6 @@
 [project]
 name = "mismiy"
-version = "0.2.0"
+version = "0.3.0.dev"
 description = "Yet another static site generator."
 authors = [{ name = "Damian Cugley", email = "pdc@alleged.org.uk" }]
 readme = "README.md"

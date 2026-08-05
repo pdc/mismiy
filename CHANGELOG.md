@@ -1,5 +1,7 @@
 # Changelog
 
+## (Unreleased changes)
+
 ## 0.2.0 (2026-08-05)
 
 ### Added
