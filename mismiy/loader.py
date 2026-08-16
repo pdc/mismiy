@@ -277,9 +277,17 @@ class Page:
             tz: the tzinfo value to use for published dates lacking
                 a time zone
         """
-        parts = blank_line.split(text, 1)
+        if text.startswith("---\n"):
+            # New style, with front matter wrapped in `---`.
+            parts = text.split("\n---\n", 1)
+        else:
+            # Old style, with front matter followed by a blank line.
+            parts = blank_line.split(text, 1)
         if len(parts) != 2:
-            raise ValueError("Expected meta and body separated by blank line.")
+            raise ValueError(
+                "Could not split text in to front matter and body. "
+                "Expected either --- markers or blank line as separator."
+            )
         meta = yaml_load(parts[0], page_schema).data
         if not meta.get("published") and (m := date_re.search(name)):
             meta["published"] = datetime(int(m[1]), int(m[2]), int(m[3]))

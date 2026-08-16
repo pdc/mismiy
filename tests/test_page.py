@@ -1,9 +1,63 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
+from textwrap import dedent
 from uuid import UUID, uuid5
 
 from mismiy.loader import Figure, Page
 from mismiy.tagging import Tagging, TagInfo
+from tests.mixins import TempDirMixin
+
+
+class TestPageFromFile(TempDirMixin, unittest.TestCase):
+
+    def test_pages_can_use_blank_line_syntax(self):
+        file_content = dedent("""
+            title: Lovely old syntax
+            author: Some Guy
+
+            Funny thing happend on the way to the circus.
+            """).lstrip()
+        file_path = self.dir_path / "2026-08-16-blankline.md"
+        file_path.write_text(file_content)
+
+        page = Page.from_file("2026-08-16-blankline", file_path, timezone.utc)
+
+        self.assertEqual(
+            page.name,
+            "2026-08-16-blankline",
+        )
+        self.assertEqual(
+            page.meta, {"title": "Lovely old syntax", "author": "Some Guy"} | page.meta
+        )
+        self.assertEqual(
+            page.body,
+            "Funny thing happend on the way to the circus.\n",
+        )
+
+    def test_pages_can_use_tripledash_syntax(self):
+        file_content = dedent("""
+            ---
+            title: A new syntax
+            author: Some Guy
+            ---
+            Funny thing happend on the way to the circus.
+            """).lstrip()
+        file_path = self.dir_path / "2026-08-16-tripledash.md"
+        file_path.write_text(file_content)
+
+        page = Page.from_file("2026-08-16-tripledash", file_path, timezone.utc)
+
+        self.assertEqual(
+            page.name,
+            "2026-08-16-tripledash",
+        )
+        self.assertEqual(
+            page.meta, {"title": "New syntax", "author": "Some Guy"} | page.meta
+        )
+        self.assertEqual(
+            page.body,
+            "Funny thing happend on the way to the circus.\n",
+        )
 
 
 class TestPage(unittest.TestCase):

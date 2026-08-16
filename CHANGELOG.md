@@ -2,6 +2,10 @@
 
 ## (Unreleased changes)
 
+### Added
+
+- [Add support for separating front matter with triple-dashes instead of blank line.](https://mismiy.dev/posts/2026-08-16-dashdashdash)
+
 ## 0.2.0 (2026-08-05)
 
 ### Added
