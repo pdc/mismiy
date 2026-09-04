@@ -41,3 +41,8 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
+
+[tool.basedpyright]
+# On of: off", "basic", "standard", "strict", "recommended", "all"
+typeCheckingMode = "standard"
+reportUnusedCallResult = false
