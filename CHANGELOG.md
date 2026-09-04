@@ -4,7 +4,13 @@
 
 ### Added
 
-- [Add support for separating front matter with triple-dashes instead of blank line.](https://mismiy.dev/posts/2026-08-16-dashdashdash)
+- [Add `--server` option to run a development web server.](https://mismiy.dev/2026-09-04-server-command)
+- [Add support for separating front matter with triple-dashes instead of blank line.](https://mismiy.dev/2026-08-16-dashdashdash)
+
+### Deprecated
+
+- The rarely-used `-s` shorthand for the `--static` option is deprecated
+  and may be removed in a future release.
 
 ## 0.2.0 (2026-08-05)
 

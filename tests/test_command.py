@@ -31,7 +31,7 @@ NO_ARGS = no_args()
 
 class TestConfig(TempDirMixin, unittest.TestCase):
     def test_has_defaults_when_no_config(self):
-        with working_dir(self.test_dir):
+        with working_dir(self.dir_path):
             config = command.Config.from_arguments(NO_ARGS)
 
         self.assertCountEqual(config.pages_dirs, [Path("posts")])
@@ -42,7 +42,7 @@ class TestConfig(TempDirMixin, unittest.TestCase):
         self.assertEqual(config.locale, "")
 
     def test_reads_config_file(self):
-        (self.dir_path / "mismiy-config.yaml").write_text(dedent("""
+        content = dedent("""
             pages_dirs:
                 - eggs
                 - bits
@@ -51,7 +51,10 @@ class TestConfig(TempDirMixin, unittest.TestCase):
             out_dir: out
             omit_dot_html: true
             locale: en_DE.utf-16
-            """))
+            port: 9001
+            bind: foo.example
+            """)
+        (self.dir_path / "mismiy-config.yaml").write_text(content)
 
         with working_dir(self.dir_path):
             config = command.Config.from_arguments(NO_ARGS)
@@ -62,6 +65,8 @@ class TestConfig(TempDirMixin, unittest.TestCase):
         self.assertEqual(config.out_dir, Path("out"))
         self.assertEqual(config.omit_dot_html, True)
         self.assertEqual(config.locale, "en_DE.utf-16")
+        self.assertEqual(config.port, 9001)
+        self.assertEqual(config.bind, "foo.example")
 
     def test_gives_precedence_to_args(self):
         (self.dir_path / "mismiy-config.yaml").write_text(dedent("""
@@ -73,6 +78,8 @@ class TestConfig(TempDirMixin, unittest.TestCase):
             out_dir: out
             omit_dot_html: true
             locale: en_DE.utf-16
+            port: 9001
+            bind: foo.example
             """))
 
         with working_dir(self.dir_path):
@@ -99,7 +106,7 @@ class TestConfig(TempDirMixin, unittest.TestCase):
 class TestCommand(TempDirMixin, unittest.TestCase):
     def test_uses_named_directories(self):
         with (
-            working_dir(self.test_dir),
+            working_dir(self.dir_path),
             patch.object(command, "Gen") as gen_cls,
             patch.object(command, "Loader") as loader_cls,
             patch.object(command, "datetime") as datetime_cls,
@@ -117,7 +124,7 @@ class TestCommand(TempDirMixin, unittest.TestCase):
 
     def test_can_use_default_directories(self):
         with (
-            working_dir(self.test_dir),
+            working_dir(self.dir_path),
             patch.object(command, "Gen") as gen_cls,
             patch.object(command, "Loader") as loader_cls,
             patch.object(command, "datetime") as datetime_cls,
@@ -137,7 +144,7 @@ class TestCommand(TempDirMixin, unittest.TestCase):
 
     def test_can_override_drafts_inclusion(self):
         with (
-            working_dir(self.test_dir),
+            working_dir(self.dir_path),
             patch.object(command, "Gen"),
             patch.object(command, "Loader") as loader_cls,
             patch.object(command, "datetime", wraps=datetime) as datetime_cls,
@@ -152,7 +159,7 @@ class TestCommand(TempDirMixin, unittest.TestCase):
     def test_can_omit_dot_html(self):
         # When called with --omit-dot-html …
         with (
-            working_dir(self.test_dir),
+            working_dir(self.dir_path),
             patch.object(command, "Gen") as gen_cls,
             patch.object(command, "Loader"),
         ):

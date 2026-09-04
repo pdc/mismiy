@@ -1,13 +1,17 @@
+import contextlib
 import locale
 import shutil
+import socket
 import sys
 import time
 from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
 from datetime import datetime
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import override
 
-from strictyaml import Bool, Map, Optional, Str, UniqueSeq
+from strictyaml import Bool, Int, Map, Optional, Str, UniqueSeq
 from strictyaml import load as yaml_load
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -24,6 +28,8 @@ config_schema = Map(
         Optional("out_dir"): Str(),
         Optional("omit_dot_html", default=False): Bool(),
         Optional("locale"): Str(),
+        Optional("port", default=8000): Int(),
+        Optional("bind"): Str(),
     }
 )
 
@@ -38,9 +44,11 @@ class Config:
     pages_dirs: list[Path]
     static_dir: Path
     templates_dir: Path
-    out_dir: Path = "pub"
+    out_dir: Path = Path("pub")
     omit_dot_html: bool = False
     locale: str = ""
+    port: int = 8001
+    bind: str = ""
 
     @classmethod
     def from_arguments(cls, args: Namespace):
@@ -74,6 +82,8 @@ class Config:
                 else defaults.get("omit_dot_html") or False
             ),
             locale=args.locale or defaults.get("locale") or "",
+            port=defaults.get("port") or 8001,
+            bind=defaults.get("bind") or "",
         )
 
     @staticmethod
@@ -108,17 +118,32 @@ class Config:
             "--omit-dot-html",
             action="store_true",
             default=None,
-            help="Omit the .html suffix from href attributes",
+            help="Omit the .html suffix from href attributes.",
+        )
+        arg_parser.add_argument(
+            "--bind",
+            metavar="ADDRESS",
+            help="When running dev server, bind to this address.",
+        )
+        arg_parser.add_argument(
+            "--port",
+            "-p",
+            type=int,
+            metavar="NUMBER",
+            help="Override default port when running dev server.",
         )
         arg_parser.add_argument(
             "--locale",
             metavar="LOCALE",
-            help="Override the default locale. "
-            "Must be a locale specifier like `en_GB.UTF-8`.",
+            help="Override the default locale. Must be a locale specifier like `en_GB.UTF-8`.",
         )
 
 
 class GeneratingEventHandler(FileSystemEventHandler):
+    gen: Gen
+    loader: Loader
+    out_dir: Path
+
     def __init__(self, gen: Gen, loader: Loader, out_dir: Path):
         self.loader = loader
         self.gen = gen
@@ -145,6 +170,10 @@ class GeneratingEventHandler(FileSystemEventHandler):
 
 
 class TemplateFlushingEventHandler(FileSystemEventHandler):
+    gen: Gen
+    loader: Loader
+    out_dir: Path
+
     def __init__(self, gen: Gen, loader: Loader, out_dir: Path):
         self.loader = loader
         self.gen = gen
@@ -171,6 +200,9 @@ class TemplateFlushingEventHandler(FileSystemEventHandler):
 
 
 class CopyingEventHandler(FileSystemEventHandler):
+    static_dir: Path
+    out_dir: Path
+
     def __init__(self, static_dir: Path, out_dir: Path):
         self.static_dir = Path(static_dir).absolute()
         self.out_dir = out_dir
@@ -195,14 +227,48 @@ class CopyingEventHandler(FileSystemEventHandler):
         self.again(event.src_path)
 
 
-def main(argv: list[str] = None):
+class DirectorySettingHttpServer(ThreadingHTTPServer):
+    """Web server serving files from a specified file-system directory."""
+
+    dir_path: Path
+
+    def __init__(self, dir_path: Path, server_address: tuple[str, int]):
+        """Create a server, specifying the directory path."""
+        self.dir_path = dir_path
+        super().__init__(server_address, SimpleHTTPRequestHandler)
+
+    # The following function is snarfed from standard library `http.server`.
+    # It ensures the server listens to beoth IPv4 and IPv6 (when available) on
+    # Microsoft Windows systems. Not tested by me.
+    # https://github.com/python/cpython/issues/83088
+    @override
+    def server_bind(self):
+        # Suppress exception when protocol is IPv4
+        with contextlib.suppress(Exception):
+            # The parameter 0 here means make the socket be NOT ipv6-only.
+            self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        return super().server_bind()
+
+    @override
+    def finish_request(self, request, client_address):
+        # This only works because self.RequestHandlerClass takes an extra parameter `directory`.
+        self.RequestHandlerClass(request, client_address, self, directory=self.dir_path)  # pyright: ignore[reportCallIssue]
+
+
+def main(argv: list[str] | None = None):
+    """Parse the command-line arguments and do the thing."""
     arg_parser = ArgumentParser(description="Generate HTML from posts.")
     Config.add_arguments(arg_parser)
     arg_parser.add_argument(
         "--watch",
         "-w",
         action="store_true",
-        help="Watch files & rerun when they change.",
+        help="Watch files & regenerate site when they change. Implies --drafts.",
+    )
+    arg_parser.add_argument(
+        "--server",
+        action="store_true",
+        help="Be a development web server. Implies --watch, --drafts.",
     )
     arg_parser.add_argument(
         "--drafts",
@@ -223,7 +289,9 @@ def main(argv: list[str] = None):
     locale.setlocale(locale.LC_ALL, config.locale)
 
     now = args.as_of or datetime.now()
-    include_drafts = args.drafts if args.drafts is not None else bool(args.watch)
+    include_drafts = (
+        args.drafts if args.drafts is not None else bool(args.watch or args.server)
+    )
     loader = Loader(config.pages_dirs, include_drafts=include_drafts, now=now)
 
     gen = Gen(
@@ -233,8 +301,7 @@ def main(argv: list[str] = None):
     )
     gen.render_pages(loader, config.out_dir)
 
-    if args.watch:
-        print("Watching for changes ...")
+    if args.watch or args.server:
         observer = Observer()
         posts_handler = GeneratingEventHandler(gen, loader, config.out_dir)
         for d in config.pages_dirs:
@@ -246,8 +313,17 @@ def main(argv: list[str] = None):
 
         observer.start()
         try:
-            while True:
-                time.sleep(1)
+            if args.server:
+                host = config.bind or "localhost"
+                host = f"[{host}]" if ":" in host else host
+                print(f"Listening to http://{host}:{config.port} ...")
+                addr = (config.bind, config.port)
+                with DirectorySettingHttpServer(config.out_dir, addr) as httpd:
+                    httpd.serve_forever()
+            else:
+                print("Watching for changes ...")
+                while True:
+                    time.sleep(1)
         except KeyboardInterrupt:
             observer.stop()
         observer.join()
