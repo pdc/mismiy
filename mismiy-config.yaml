@@ -1,3 +1,4 @@
 pages_dirs:
-- posts
-- pages
+  - posts
+  - pages
+locale: en_GB.UTF-8

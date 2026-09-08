@@ -3,31 +3,31 @@
     <head>
         <meta charset=UTF-8>
         <title>Index</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
             {{> inline.css }}
             {{> index.css }}
         </style>
         {{#links}}
-        <link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>
+        <link rel={{rel}} href="{{href}}"{{#type}} type="{{.}}"{{/type}}>
         {{/links}}
     </head>
     <body>
         {{>header.html}}
         <section class="text">
+            <h1 class="logo">{{title}}</h1>
             {{{body_html}}}
         </section>
-        <h1>Build log (blog)</h1>
-        <ul class="main">
-            {{#reverse_chronological}}
-            <li>
-                {{#published}}
-                <time datetime="{{iso_date}}">{{day}} {{month_name}} {{year}}</time>
-                {{/ published }}
-                <a href="{{href}}" style="view-transition-name: post-{{ordinal}}">{{ordinal}}. {{title}}</a>
-            </li>
-            {{/reverse_chronological}}
-        </ul>
+        <section class="reverseChronological">
+            <h2>Build log (blog)</h2>
+            {{>reverse_chronological.html}}
+        </section>
+        <nav class="tagReferences">
+            <h2>Tags</h2>
+            <ul>
+                {{#tags}}{{>tag-reference.html}}{{/tags}}
+            </ul>
+        </nav>
         <link rel=stylesheet href="{{ dotdotslash }}style.css">
     </body>
 </html>

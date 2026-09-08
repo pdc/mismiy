@@ -4,6 +4,8 @@
 
 ### Added
 
+- [Add support for plural forms in templates](https://mismiy.dev/2026-09-08-pluralization)
+- [Add tags to the template context for the index page](https://mismiy.dev/2026-09-04-tags-in-index-page)
 - [Add `--server` option to run a development web server.](https://mismiy.dev/2026-09-04-server-command)
 - [Add support for separating front matter with triple-dashes instead of blank line.](https://mismiy.dev/2026-08-16-dashdashdash)
 

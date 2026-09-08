@@ -1,6 +1,6 @@
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone, tzinfo
 from pathlib import Path
@@ -9,6 +9,7 @@ from uuid import UUID, uuid5
 from zoneinfo import ZoneInfo
 
 import mistletoe
+from babel import Locale
 from strictyaml import Any as Any_Yaml
 from strictyaml import (
     Datetime,
@@ -27,7 +28,7 @@ from strictyaml import (
 from strictyaml import load as yaml_load
 
 from .links import Link, munged, url_relative_to
-from .mustache_utils import expand_date
+from .mustache_utils import ExpandedDate
 from .tagging import Tagging
 from .xml import Elt
 
@@ -111,15 +112,16 @@ class Figure:
 
     id: str
     src_by_res: dict[str, str]
-    caption: str = None
-    description: str = None
-    width: int = None
-    height: int = None
-    _srcset: str = None
+    caption: str | None = None
+    description: str | None = None
+    width: int | None = None
+    height: int | None = None
+    alt: str | None = None
+    _srcset: str | None = None
 
     @property
     def src(self):
-        return self.src_by_res.get("1x")
+        return self.src_by_res["1x"]
 
     @property
     def srcset(self):
@@ -195,29 +197,20 @@ class Page:
     def dotdotslash(self):
         return "".join(["../"] * (len(self.name.split("/")) - 1))
 
-    def context(self, tagging: Tagging = None, *, omit_dot_html=False) -> dict:
-        result = {
-            k: expand_date(d) if isinstance(d, (datetime, date)) else d
-            for k, d in self.meta.items()
-        }
+    def context(self, locale: Locale, tagging: Tagging, *, omit_dot_html=False) -> dict:
+        result = self.reference(locale, tagging, omit_dot_html=omit_dot_html)
+        result["dotdotslash"] = self.dotdotslash
+        result["body_html"] = self.body_html()
+
         links_by_rel = {}
         links = []
         for link in self.links:
             munged_link = munged(link, omit_dot_html=omit_dot_html)
             links_by_rel.setdefault(link.rel, []).append(munged_link)
             links.append(munged_link)
-        result.update(
-            {
-                "name": self.name,
-                "href": self.href,
-                "dotdotslash": self.dotdotslash,
-                "body_html": self.body_html(),
-                "links": links,
-                "links_by_rel": links_by_rel,
-            }
-        )
-        if tagging and (tag_infos := tagging.page_tags(self)):
-            result["tags"] = tag_infos
+        result["links"] = links
+        result["links_by_rel"] = links_by_rel
+
         if figures := self.resolve_figures():
             result["figures"] = figures
             result["figures_by_id"] = {f.id: f for f in figures}
@@ -238,14 +231,20 @@ class Page:
                 f.id = f"fig{i + 1}"
             return figures
 
-    def reference(self, tagging: Tagging = None, *, omit_dot_html=False):
+    def reference(
+        self, locale: Locale, tagging: Tagging, *, omit_dot_html=False
+    ) -> dict:
         """Just enough context for the link to this page."""
         result = {
-            k: expand_date(d) if isinstance(d, (datetime, date)) else d
+            k: ExpandedDate(locale, d) if isinstance(d, (datetime, date)) else d
             for k, d in self.meta.items()
         }
-        href = self.href.removesuffix(".html") if omit_dot_html else self.href
-        result.update({"name": self.name, "href": href})
+        result["name"] = self.name
+        result["href"] = self.href.removesuffix(".html") if omit_dot_html else self.href
+        if tagging and (tags_infos := tagging.page_tags(self)):
+            result["tags"] = [
+                munged(info, omit_dot_html=omit_dot_html) for info in tags_infos
+            ]
         return result
 
     def body_html(self):
@@ -492,10 +491,15 @@ def json_parse(field_text: str, subschema, label=None):
 class Loader:
     """Loads pages from one or more directories full of Makrdown files."""
 
+    class MissingMeta(Exception):
+        pass
+
+    sources: Sequence[Source]
+
     def __init__(
         self,
-        pages_dirs: list[Path | str],
-        include_drafts=False,
+        pages_dirs: Sequence[Path | str],
+        include_drafts: bool = False,
         now: datetime | None = None,
     ):
         self.sources = [
@@ -503,18 +507,20 @@ class Loader:
         ]
 
     @property
-    def id(self):
+    def id(self) -> str:
         """Id for use in feed."""
         for source in self.sources:
             if result := source.id:
                 return result
+        raise self.MissingMeta("No source has an id")
 
     @property
-    def title(self):
+    def title(self) -> str:
         """Title for use in feed."""
         for source in self.sources:
             if result := source.title:
                 return result
+        raise self.MissingMeta("No source has a title")
 
     @property
     def tz(self):

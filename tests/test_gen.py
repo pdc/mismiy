@@ -209,16 +209,52 @@ Sir David Attenborough, born 8 May 1926
         )
 
     def test_renders_index_page(self):
-        self.add_post("2024-05-05-hello", "title: Hello\n\nHello, World!")
-        self.add_post("2024-05-06-hello", "title: Greetings\n\nGreetings, World!")
+        self.add_post(
+            "2024-05-05-hello",
+            dedent("""
+            ---
+            title: Hello
+            summary: Greeting time
+            tags:
+                - Frog
+            ---
+            Hello, World!
+            """).lstrip(),
+        )
+        self.add_post(
+            "2024-05-06-hello",
+            dedent("""
+            ---
+            title: Greetings
+            tags:
+                - Sheep
+                - Frog
+            ---
+            Greetings, World!
+            """).lstrip(),
+        )
         self.add_tpl(
             "index.html",
-            '{{#links}}<link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>\n{{/links}}\n'
-            "<ul>\n"
-            "  {{# reverse_chronological }}\n"
-            '  <li><a href="{{ href }}">{{ title }}</a></li>\n'
-            "  {{/ reverse_chronological }}\n"
-            "</ul>\n",
+            dedent("""
+                {{#links}}<link rel={{rel}} href="{{href}}"{{#type}} type="{{type}}"{{/type}}>
+                {{/links}}
+                <ul>
+                    {{#reverse_chronological}}
+                    <li>
+                        <a href="{{href}}">{{ title }}{{#summary}} • {{.}}{{/summary}}</a>
+                        {{#tags}}
+                        <a href="{{href}}">{{label}} ({{count}})</a>
+                        {{/tags}}
+                    </li>
+                    {{/reverse_chronological}}
+                </ul>
+                <h2>Tags</h2>
+                <ul>
+                    {{#tags}}
+                    <a href="{{href}}">{{label}} ({{#count}}{{#plural}}{{#one}}{{number}} post{{/one}}{{#other}}{{number}} posts{{/other}}{{/plural}}{{/count}})</a>
+                    {{/tags}}
+                </ul>
+                """).lstrip(),
         )
 
         gen = Gen(self.tpl_dir)
@@ -229,11 +265,25 @@ Sir David Attenborough, born 8 May 1926
         self.assertTrue(html_path.exists())
         self.assertEqual(
             html_path.read_text(),
-            '<link rel=alternate href="feed.atom" type="application/atom+xml">\n'
-            "<ul>\n"
-            '  <li><a href="2024-05-06-hello.html">Greetings</a></li>\n'
-            '  <li><a href="2024-05-05-hello.html">Hello</a></li>\n'
-            "</ul>\n",
+            dedent("""
+                <link rel=alternate href="feed.atom" type="application/atom+xml">
+                <ul>
+                    <li>
+                        <a href="2024-05-06-hello.html">Greetings</a>
+                        <a href="tagged/frog.html">Frog (2)</a>
+                        <a href="tagged/sheep.html">Sheep (1)</a>
+                    </li>
+                    <li>
+                        <a href="2024-05-05-hello.html">Hello • Greeting time</a>
+                        <a href="tagged/frog.html">Frog (2)</a>
+                    </li>
+                </ul>
+                <h2>Tags</h2>
+                <ul>
+                    <a href="tagged/frog.html">Frog (2 posts)</a>
+                    <a href="tagged/sheep.html">Sheep (1 post)</a>
+                </ul>
+                """).lstrip(),
         )
 
     def test_renders_index_page_sans_dot_html(self):

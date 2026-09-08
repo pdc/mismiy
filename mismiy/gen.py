@@ -8,11 +8,12 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
 
+from babel import Locale
 from chevron import render
 
 from .links import Link, munged
 from .loader import Figure, Loader, Page, datetime_naïve
-from .mustache_utils import as_date_lambda, as_duration_lambda
+from .mustache_utils import as_duration_lambda, locale_date_lambda, locale_plural_lambda
 from .tagging import Tagging
 from .xml import Doc, Elt
 
@@ -23,12 +24,14 @@ class Gen:
     tpl_dir: Path
     static_dir: Path | None
     omit_dot_html: bool
+    locale: Locale
 
     def __init__(
         self,
         tpl_dir: Path | str,
-        static_dir: Path | str = None,
+        static_dir: Path | str | None = None,
         omit_dot_html: bool = False,
+        locale: str | Locale | None = None,
     ):
         self.tpl_dir = Path(tpl_dir)
         self.flush_tpls()
@@ -41,11 +44,18 @@ class Gen:
             else:
                 self.static_dir = None
         self.omit_dot_html = omit_dot_html
+        self.locale = (
+            locale
+            if isinstance(locale, Locale)
+            else Locale.parse(locale) if locale else Locale.default()
+        )
 
     def flush_tpls(self):
         """Discard cached templates and reload."""
         self.templates = {
-            self.fname(file): file.read_text() for file in self.tpl_dir.glob("**/*")
+            self.fname(file): file.read_text()
+            for file in self.tpl_dir.glob("**/*")
+            if file.is_file()
         }
 
     def render_pages(self, loader: Loader, public_path: Path | str):
@@ -71,16 +81,13 @@ class Gen:
                 continue
 
             layout = page.meta["kind"]
-            context = page.context(omit_dot_html=self.omit_dot_html)
-            if tags_infos := tagging.page_tags(page):
-                context["tags"] = [
-                    munged(info, omit_dot_html=self.omit_dot_html)
-                    for info in tags_infos
-                ]
+            context = page.context(
+                self.locale, tagging, omit_dot_html=self.omit_dot_html
+            )
             self._render_1(public_path, f"{page.name}.html", context, f"{layout}.html")
 
         # Now let’s render the index pages.
-        self.render_index(loader, public_path, index_page)
+        self.render_index(loader, tagging, public_path, index_page)
         self.render_tagged(tagging, public_path)
 
         post_count = len(loader.posts())
@@ -90,16 +97,30 @@ class Gen:
             with feed_path.open("w", encoding="UTF-8") as f:
                 self._atom_feed(loader, page=(i + 1)).write_to(f)
 
-    def render_index(self, loader: Loader, public_path: Path, index_page: Page | None):
+    def render_index(
+        self,
+        loader: Loader,
+        tagging: Tagging,
+        public_path: Path,
+        index_page: Page | None,
+    ):
+        tag_infos = tagging.narrowing_tags([])  # This can’t possibly work, can it?
         context = {
             "reverse_chronological": [
-                p.reference(omit_dot_html=self.omit_dot_html)
+                p.reference(self.locale, tagging, omit_dot_html=self.omit_dot_html)
                 for p in reversed(loader.posts())
             ],
+            "tags": sorted(
+                (
+                    munged(tag_info, omit_dot_html=self.omit_dot_html)
+                    for tag_info in tag_infos
+                ),
+                key=lambda t: (-t.count, t.label),
+            ),
             "is_index": True,
         }
         if index_page:
-            context.update(index_page.context())
+            context.update(index_page.context(self.locale, tagging))
         context.setdefault("links", []).append(
             Link("alternate", self.feed_href(page=1), type="application/atom+xml")
         )
@@ -125,7 +146,7 @@ class Gen:
                     for info in tagging.widening_tags(tags)
                 ],
                 "reverse_chronological": [
-                    p.reference(omit_dot_html=self.omit_dot_html)
+                    p.reference(self.locale, tagging, omit_dot_html=self.omit_dot_html)
                     for p in reversed(pages)
                 ],
                 "dotdotslash": "../",
@@ -142,9 +163,13 @@ class Gen:
         public_path: Path,
         name: str,
         context: dict[str, Any],
-        tpl_name: str = None,
+        tpl_name: str | None = None,
     ):
-        more_context = {"as_date": as_date_lambda, "as_duration": as_duration_lambda}
+        more_context = {
+            "plural": locale_plural_lambda(self.locale),
+            "as_date": locale_date_lambda(self.locale),
+            "as_duration": as_duration_lambda,
+        }
         # Add has_foo for all lists to facilitate existence checks.
         for k, v in context.items():
             if isinstance(v, Sequence) and not isinstance(v, (str, bytes)):

@@ -1,5 +1,4 @@
 import contextlib
-import locale
 import shutil
 import socket
 import sys
@@ -46,7 +45,7 @@ class Config:
     templates_dir: Path
     out_dir: Path = Path("pub")
     omit_dot_html: bool = False
-    locale: str = ""
+    locale: str | None = None
     port: int = 8001
     bind: str = ""
 
@@ -252,7 +251,9 @@ class DirectorySettingHttpServer(ThreadingHTTPServer):
     @override
     def finish_request(self, request, client_address):
         # This only works because self.RequestHandlerClass takes an extra parameter `directory`.
-        self.RequestHandlerClass(request, client_address, self, directory=self.dir_path)  # pyright: ignore[reportCallIssue]
+        self.RequestHandlerClass(
+            request, client_address, self, directory=self.dir_path
+        )  # pyright: ignore[reportCallIssue]
 
 
 def main(argv: list[str] | None = None):
@@ -286,8 +287,6 @@ def main(argv: list[str] | None = None):
     args = arg_parser.parse_args(argv)
     config = Config.from_arguments(args)
 
-    locale.setlocale(locale.LC_ALL, config.locale)
-
     now = args.as_of or datetime.now()
     include_drafts = (
         args.drafts if args.drafts is not None else bool(args.watch or args.server)
@@ -298,6 +297,7 @@ def main(argv: list[str] | None = None):
         config.templates_dir,
         config.static_dir,
         omit_dot_html=config.omit_dot_html,
+        locale=config.locale,
     )
     gen.render_pages(loader, config.out_dir)
 

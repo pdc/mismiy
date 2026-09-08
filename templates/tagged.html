@@ -14,35 +14,33 @@
     </head>
     <body>
         {{>header.html}}
-        <h1>Tagged {{#tags}}{{^first}} + {{/first}}<i>{{label}}</i>{{/tags}}</h1>
-        <ul class="main">
-            {{# reverse_chronological }}
-            <li>
-                {{# published }}
-                <time datetime="{{iso_date}}">{{day}} {{month_name}} {{year}}</time>
-                {{/ published }}
-                <a href="{{dotdotslash}}{{href}}">{{title}}</a>
-            </li>
-            {{/ reverse_chronological }}
-        </ul>
-        <aside class="more">
+        <section class="text">
+            <h1>{{#tags}}{{^first}} + {{/first}}{{label}}{{/tags}}</h1>
+            <p>
+                Showing only posts filed under
+                {{#tags.1}}these tags.{{/tags.1}}{{^tags.1}}this tag.{{/tags.1}}
+            </p>
+        </section>
+        <section class="reverseChronological">
+            <h2>Posts with {{#tags.1}}these tags{{/tags.1}}{{^tags.1}}this tag{{/tags.1}}</h2>
+            {{>reverse_chronological.html}}
+        </section>
+        <nav class="tagReferences">
             {{#has_narrowings}}
-            <p>Narrowings</p>
-            <nav class="tags">
-                {{#narrowings}}
-                <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
-                {{/narrowings}}
-            </nav>
+            <h2>Narrowings</h2>
+            <p>Add a tag to show fewer posts.</p>
+            <ul>
+            {{#narrowings}}{{>tag-reference.html}}{{/narrowings}}
+            </ul>
             {{/has_narrowings}}
             {{#has_widenings}}
-            <p>Widenings</p>
-            <nav class="tags">
-                {{#widenings}}
-                <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
-                {{/widenings}}
-            </nav>
+            <h2>Widenings</h2>
+            <p>Remove a tag to show more.</p>
+            <ul>
+            {{#widenings}}{{>tag-reference.html}}{{/widenings}}
+            </ul>
             {{/has_widenings}}
-        </aside>
+        </nav>
         <link rel=stylesheet href="{{ dotdotslash }}style.css">
     </body>
 </html>

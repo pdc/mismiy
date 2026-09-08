@@ -1,50 +1,86 @@
-import locale
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date, datetime
+from functools import partial
+
+from babel import Locale
+from babel.numbers import format_decimal
 
 
-def expand_date(d: datetime | date) -> Mapping[str, str]:
-    month_name = locale.nl_langinfo(getattr(locale, f"MON_{d.month}"))
+@dataclass
+class ExpandedDate:
+    """Make partially digested date info available to Mustache template."""
 
-    return {
-        "year": str(d.year),
-        "month": str(d.month),
-        "month_2digits": "%02d" % d.month,
-        "month_name": month_name,
-        "day": str(d.day),
-        "day_2digits": "%02d" % d.day,
-        "iso_date": (d.date() if isinstance(d, datetime) else d).isoformat(),
-        "iso_datetime": d.isoformat(),
-    }
+    locale: Locale
+    value: date | datetime
+
+    @property
+    def year(self):
+        return str(self.value.year)
+
+    @property
+    def month(self):
+        return str(self.value.month)
+
+    @property
+    def day(self):
+        return str(self.value.day)
+
+    @property
+    def month_2digits(self):
+        return "%02d" % self.value.month
+
+    @property
+    def day_2digits(self):
+        return "%02d" % self.value.day
+
+    @property
+    def month_name(self):
+        return self.locale.months["format"]["wide"][self.value.month]
+
+    @property
+    def iso_date(self):
+        m = getattr(self.value, "date", None)
+        d = m() if m else self.value
+        return d.isoformat()
+
+    @property
+    def iso_datetime(self):
+        return self.value.isoformat()
 
 
 year_re = re.compile(r"^\d{4}$")
 
 
-def as_date_lambda(text: str, render: Callable) -> str:
-    """A mustache ‘lambda’ to convert context value to a date object.
+def locale_date_lambda(locale: Locale) -> Callable[[str, Callable], str]:
+    expand_date = partial(ExpandedDate, locale)
 
-    Exanmple: `{{#birthday}}{{#as_date}}{{day}} {{month_name}}{{/as_date}}{{/birthday}}`
-    """
-    # Get the date value:
-    value = render("{{.}}")
-    # Since we are using this on data parsed by StrictYaml, in practice this
-    # value will be a string, but let’s allow for actual values for future-proofing.
-    if isinstance(value, int):
-        # It’s just a year.
-        data = {"year": value}
-    elif isinstance(value, (date, datetime)):
-        data = expand_date(value)
-    elif year_re.match(value):
-        data = {"year": int(value)}
-    elif "T" in value:
-        data = expand_date(datetime.fromisoformat(value))
-    else:
-        data = expand_date(date.fromisoformat(value))
+    def as_date_lambda(text: str, render: Callable) -> str:
+        """A mustache ‘lambda’ to convert context value to a date object.
 
-    # Now render the section text with the expanded date.
-    return render(text, data)
+        Example: `{{#birthday}}{{#as_date}}{{day}} {{month_name}}{{/as_date}}{{/birthday}}`
+        """
+        # Get the date value:
+        value = render("{{.}}")
+        # Since we are using this on data parsed by StrictYaml, in practice this
+        # value will be a string, but let’s allow for actual values for future-proofing.
+        if isinstance(value, int):
+            # It’s just a year.
+            data = {"year": str(value)}
+        elif isinstance(value, (date, datetime)):
+            data = expand_date(value)
+        elif year_re.match(value):
+            data = {"year": value}
+        elif "T" in value:
+            data = expand_date(datetime.fromisoformat(value))
+        else:
+            data = expand_date(date.fromisoformat(value))
+
+        # Now render the section text with the expanded date.
+        return render(text, data)
+
+    return as_date_lambda
 
 
 duration_pattern = re.compile(
@@ -78,3 +114,26 @@ def as_duration_lambda(text: str, render: Callable) -> str:
         }
         return render(text, data)
     return text
+
+
+def locale_plural_lambda(locale: Locale):
+    """Create Mustache lambda for rendering plural forms.
+
+    The top of the context stack must be an integer.
+    The content of the section is rendered with an object with
+    the tag for the corresponding plural form set to true,
+    and a field `number`
+    """
+
+    def plural_lambda(text: str, render: Callable) -> str:
+        value = render("{{.}}")
+        if isinstance(value, str):
+            value = int(value)
+        plural_tag = locale.plural_form(value)
+        data = {
+            "number": format_decimal(value, locale=locale),
+            plural_tag: True,
+        }
+        return render(text, data)
+
+    return plural_lambda

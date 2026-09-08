@@ -1,8 +1,6 @@
 <p>Posts on similar topics</p>
 <nav class="tags">
     <ul>
-        {{#tags}}
-        <li><a href="{{dotdotslash}}{{href}}">{{label}} <span><rp>(</rp>{{count}}<rp>)</rp></span></a></li>
-        {{/tags}}
+        {{#tags}}{{>tag-reference.html}}{{/tags}}
     </ul>
 </nav>

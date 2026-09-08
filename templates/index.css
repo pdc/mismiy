@@ -1,8 +1,13 @@
 h1 {
-    margin: 0;
-    font-size: 1.25em;
-    font-weight: 500;
+    font-size: 1.5em;
+    font-weight: 200;
+    font-family: var(--swiss);
+    margin: 1lh 0 0.5lh;
 }
+h1.logo {
+    font-size: 3rem;
+}
+
 ul.main {
     margin: 0;
     padding: 0;
@@ -14,48 +19,105 @@ ul.main {
 }
 
 @media (max-width: 36em) {
-    section.text {
-        margin-top: 2em;
-    }
-    h1 {
-        margin: 1lh 0 0.5lh;
-    }
-    ul.main li {
-        margin: var(--vsmall) 0;
-        display: flex;
-        flex-flow: column-reverse; /* Put date under title */
+    section {
+        --houter: 0.5rem;
 
-        time {
-            padding-top: calc(var(--vsmall) / 2);
+        margin-top: 2lh;
+        h1 {
+            margin: 2lh var(--houter) 1lh;
         }
+        h2 {
+            margin: 1lh var(--houter) 0.5lh;
+            font-size: 1.5em;
+        }
+        p {
+            margin: 1lh var(--houter);
+        }
+    }
+    ul.main {
+        margin: var(--vsmall) var(--houter);
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: var(--vsmall) 0.5em;
 
+        li {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: subgrid;
+            a {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: subgrid;
+
+                span:first-child {
+                    justify-self: end;
+                }
+            }
+            time {
+                grid-column: 2 / -1;
+                display: block;
+                padding-top: calc(var(--vsmall) / 2);
+            }
+        }
     }
 }
 
 @media (min-width: 36em) {
     section.text {
         grid-column: 2 / span 2;
-        margin-top: 2lh;
-        margin-bottom: 2lh;
     }
-    h1 {
-        grid-column: 2 / span 2;
-    }
-    ul.main {
+    section.reverseChronological {
         grid-column: 2 / span 2;
         display: grid;
         grid-template-columns: subgrid;
 
-        & li {
-            grid-column: 1 / span 2;
-            margin-top: 0.75em;
-
+        h2 {
+            grid-column: 1 / -1;
+        }
+        ul {
+            grid-column: 1 / -1;
             display: grid;
             grid-template-columns: subgrid;
+            gap: var(--vgap) 1em;
+            grid-auto-flow: row dense;
             align-items: baseline;
+            margin: 0;
+            padding: 0;
         }
-        & a {
-            display: block;
+        li {
+            display: contents;
         }
+        a {
+            grid-column: 2;
+        }
+        time {
+            grid-column: 1;
+        }
+    }
+    nav.tagReferences {
+        grid-column: 2 / span 2;
+
+        p {
+            font-style: italic;
+        }
+
+        ul {
+            align-self: start;
+            display: grid;
+            grid-template-columns: max-content auto;
+            gap: var(--vgap) 1rem;
+            align-items: end;
+            margin: 0;
+            padding: 0;
+        }
+        li,
+        a {
+            display: contents;
+        }
+    }
+}
+@media (min-width: 48em) {
+    nav.tagReferences {
+        grid-column: 4 / -1;
     }
 }

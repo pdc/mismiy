@@ -2,7 +2,7 @@
 
 import io
 from collections.abc import Mapping
-from typing import Self
+from typing import Self, override
 from xml.sax.saxutils import escape
 
 # Default namespace definitions. Individual Doc instances may override these.
@@ -23,7 +23,15 @@ class Elt:
     In other words, we do not support mixed content.
     """
 
-    def __init__(self, etype: str, attrs: Mapping[str, str] = None, text: str = None):
+    class NotFound(Exception):
+        pass
+
+    def __init__(
+        self,
+        etype: str,
+        attrs: Mapping[str, str] | None = None,
+        text: str | None = None,
+    ):
         self.etype = etype
         self.attrs = attrs or {}
         self.text = text
@@ -31,7 +39,10 @@ class Elt:
         self.elements = []
 
     def element(
-        self, etype: str, attrs: Mapping[str, str] | str = None, text: str = None
+        self,
+        etype: str,
+        attrs: Mapping[str, str] | str | None = None,
+        text: str | None = None,
     ) -> "Elt":
         """Add a child element to this element."""
         if isinstance(attrs, str) and text is None:
@@ -76,8 +87,8 @@ class Elt:
             bad_attrs = [k for k in attrs.keys() if k.startswith(default_prefix)]
             if bad_attrs:
                 raise ValueError(
-                    f'Cannot represent attrs {", ".join(bad_attrs)} '
-                    f'with default prefix {default_prefix.removesuffix(":")}'
+                    f"Cannot represent attrs {', '.join(bad_attrs)} "
+                    f"with default prefix {default_prefix.removesuffix(':')}"
                 )
             etype = self.etype.removeprefix(default_prefix)
             attrs = {k.removeprefix(default_prefix): v for k, v in attrs.items()}
@@ -100,13 +111,14 @@ class Elt:
         self.write_to(buf)
         return buf.getvalue()
 
-    def find(self, etype: str, attrs: Mapping[str, str] = None) -> Self | None:
+    def find(self, etype: str, attrs: Mapping[str, str] | None = None) -> Self | None:
         """Used in tests to find a matching child element."""
         for element in self.elements:
             if element.etype == etype and (
                 attrs is None or all(element.attrs[k] == v for k, v in attrs.items())
             ):
                 return element
+        raise self.NotFound(f"Did not find {etype=} {attrs=}")
 
 
 class Doc(Elt):
@@ -134,14 +146,15 @@ class Doc(Elt):
     def __init__(
         self,
         etype: str,
-        attrs: Mapping[str, str] = None,
-        namespaces: Mapping[str, str] = None,
+        attrs: Mapping[str, str] | None = None,
+        namespaces: Mapping[str, str] | None = None,
         *,
-        text=None,
+        text: str | None = None,
     ):
         super().__init__(etype, attrs, text)
         self.namespaces = NAMESPACES | (dict(namespaces) if namespaces else {})
 
+    @override
     def write_to(self, out):
         attrs = self.attrs
 

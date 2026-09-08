@@ -1,15 +1,20 @@
 import unittest
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from textwrap import dedent
 from uuid import UUID, uuid5
 
-from mismiy.loader import Figure, Page
+from babel import Locale
+
+from mismiy.loader import Figure, Page, Person
+from mismiy.mustache_utils import ExpandedDate
 from mismiy.tagging import Tagging, TagInfo
 from tests.mixins import TempDirMixin
 
+en_GB = Locale("en", "GB")
+some_tagging = Tagging()
+
 
 class TestPageFromFile(TempDirMixin, unittest.TestCase):
-
     def test_pages_can_use_blank_line_syntax(self):
         file_content = dedent("""
             title: Lovely old syntax
@@ -26,9 +31,8 @@ class TestPageFromFile(TempDirMixin, unittest.TestCase):
             page.name,
             "2026-08-16-blankline",
         )
-        self.assertEqual(
-            page.meta, {"title": "Lovely old syntax", "author": "Some Guy"} | page.meta
-        )
+        self.assertEqual(page.meta["title"], "Lovely old syntax")
+        self.assertEqual(page.meta["author"], Person("Some Guy"))
         self.assertEqual(
             page.body,
             "Funny thing happend on the way to the circus.\n",
@@ -51,20 +55,19 @@ class TestPageFromFile(TempDirMixin, unittest.TestCase):
             page.name,
             "2026-08-16-tripledash",
         )
-        self.assertEqual(
-            page.meta, {"title": "New syntax", "author": "Some Guy"} | page.meta
-        )
+        self.assertEqual(page.meta["title"], "A new syntax")
+        self.assertEqual(page.meta["author"], Person("Some Guy"))
         self.assertEqual(
             page.body,
             "Funny thing happend on the way to the circus.\n",
         )
 
 
-class TestPage(unittest.TestCase):
+class TestPageContext(unittest.TestCase):
     def test_renders_markdown(self):
         post = Page("2024-05-05--hello", {"title": "Hello"}, "Hello, *world*!")
 
-        result = post.context()
+        result = post.context(en_GB, some_tagging)
 
         self.assertEqual(result["body_html"], "<p>Hello, <em>world</em>!</p>\n")
 
@@ -77,7 +80,7 @@ class TestPage(unittest.TestCase):
         tagging = Tagging()
         tagging.add(page)
 
-        result = page.context()
+        result = page.context(en_GB, some_tagging)
 
         # Then the context includes at least the following items:
         self.assertEqual(
@@ -98,7 +101,7 @@ class TestPage(unittest.TestCase):
             "Hello, *world*!",
         )
 
-        result = page.context()
+        result = page.context(en_GB, some_tagging)
 
         # Then the context includes data_json:
         self.assertEqual(
@@ -106,7 +109,7 @@ class TestPage(unittest.TestCase):
             '{\n    "@context": "https://schema.org/"\n}',
         )
 
-    def test_adds_tag_info_to_context_if_tagged(self):
+    def test_adds_tag_info_to_context_when_tagged(self):
         page = Page(
             "2024-05-05--hello",
             {"title": "Hello", "tags": ["Some tag"]},
@@ -115,12 +118,13 @@ class TestPage(unittest.TestCase):
         tagging = Tagging()
         tagging.add(page)
 
-        result = page.context(tagging)
+        locale = en_GB
+        result = page.context(locale, tagging)
 
         # Then the context includes at least the following items:
         self.assertEqual(
-            result,
-            result | {"tags": [TagInfo("Some tag", "tagged/sometag.html", 1)]},
+            result["tags"],
+            [TagInfo("Some tag", "tagged/sometag.html", 1)],
         )
 
     def test_converts_datetime_to_dict(self):
@@ -133,31 +137,86 @@ class TestPage(unittest.TestCase):
             "Hello, *world*!",
         )
 
-        result = post.context()
+        locale = en_GB
+        result = post.context(locale, some_tagging)
 
         # Then the context includes the date broken in to formatted parts.
-        month_expected = datetime(2024, 9, 7).strftime("%B")
         self.assertEqual(
-            result["published"],
-            result["published"]
-            | {
-                "year": "2024",
-                "month_name": month_expected,
-                "month": "9",
-                "month_2digits": "09",
-                "day": "7",
-                "day_2digits": "07",
-                "iso_date": "2024-09-07",
-            },
+            result["published"], ExpandedDate(locale, datetime(2024, 9, 7))
         )
 
     def test_dotdotslash_when_slahes_in_name(self):
         post = Page("2024/05/05/hello", {"title": "Hello"}, "Hello, *world*!")
 
-        result = post.context()
+        result = post.context(en_GB, some_tagging)
 
         # Then the dotdotslash item is the path back to the root of the posts.
         self.assertEqual(result["dotdotslash"], "../../../")
+
+
+class TestPageReference(unittest.TestCase):
+    def test_includes_meta_with_dates(self):
+        published = date(2026, 8, 28)
+        page = Page(
+            "2026/08/28/so",
+            {"title": "Title of page", "published": published},
+            "Content of page",
+        )
+
+        locale = en_GB
+        result = page.reference(locale, some_tagging)
+
+        self.assertEqual(result["title"], "Title of page")
+        self.assertEqual(result["published"], ExpandedDate(locale, date(2026, 8, 28)))
+        self.assertEqual(result["href"], "2026/08/28/so.html")
+
+    def test_includes_tag_info(self):
+        published = date(2026, 8, 28)
+        page = Page(
+            "2026/08/28/so",
+            {
+                "title": "Title of page",
+                "published": published,
+                "tags": ["supple", "pliant"],
+            },
+            "Content of page",
+        )
+        tagging = Tagging()
+        tagging.add(page)
+
+        locale = en_GB
+        result = page.reference(locale, tagging, omit_dot_html=False)
+
+        self.assertCountEqual(
+            result["tags"],
+            [
+                TagInfo("supple", "tagged/supple.html", 1),
+                TagInfo("pliant", "tagged/pliant.html", 1),
+            ],
+        )
+        self.assertEqual(result["href"], "2026/08/28/so.html")
+
+    def test_omits_dot_html(self):
+        published = date(2026, 8, 28)
+        page = Page(
+            "2026/08/28/so",
+            {
+                "title": "Title of page",
+                "published": published,
+                "tags": ["supple"],
+            },
+            "Content of page",
+        )
+        tagging = Tagging()
+        tagging.add(page)
+
+        result = page.reference(en_GB, tagging, omit_dot_html=True)
+
+        self.assertEqual(
+            result["tags"],
+            [TagInfo("supple", "tagged/supple", 1)],
+        )
+        self.assertEqual(result["href"], "2026/08/28/so")
 
 
 class TestPageFigures(unittest.TestCase):
@@ -178,7 +237,7 @@ class TestPageFigures(unittest.TestCase):
             "Hello world",
         )
 
-        result = page.context()
+        result = page.context(en_GB, some_tagging)
 
         # Then metadata fields are converted to HTML.
         actual = result["figures"][0]
@@ -205,7 +264,7 @@ class TestPageFigures(unittest.TestCase):
             "Hello world",
         )
 
-        result = page.context()
+        result = page.context(en_GB, some_tagging)
 
         # Then metadata fields are converted to HTML.
         actual = result["figures"][0]
@@ -232,7 +291,7 @@ class TestPageFigures(unittest.TestCase):
             "Hello world",
         )
 
-        result = page.context()
+        result = page.context(en_GB, some_tagging)
 
         # Then the 1x image is used for the src.
         self.assertEqual(result["figures"][0].src, "bar.600.png")
@@ -254,7 +313,7 @@ class TestPageFigures(unittest.TestCase):
             "Hello world",
         )
 
-        result = page.context()
+        result = page.context(en_GB, some_tagging)
 
         # Then the figures without ids have ids invented.
         self.assertEqual(
@@ -267,13 +326,13 @@ class TestPageFigures(unittest.TestCase):
         )
 
 
-class TestPost(unittest.TestCase):
+class TestPostId(unittest.TestCase):
     def test_can_make_id_relative_to_uuid(self):
         post = Page("2024-05-25-hello", {"title": "Hello"}, "Hello, *world*!")
 
         self.assertEqual(
             post.make_id("urn:uuid:6f84b6fb-779e-5599-8a07-c133c2d6bd47"),
-            f'urn:uuid:{uuid5(UUID("6f84b6fb-779e-5599-8a07-c133c2d6bd47"), "2024-05-25-hello")}',
+            f"urn:uuid:{uuid5(UUID('6f84b6fb-779e-5599-8a07-c133c2d6bd47'), '2024-05-25-hello')}",
         )
 
     def test_can_make_id_relative_to_tag(self):

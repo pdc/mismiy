@@ -50,7 +50,7 @@ class TestConfig(TempDirMixin, unittest.TestCase):
             static_dir: web
             out_dir: out
             omit_dot_html: true
-            locale: en_DE.utf-16
+            locale: de_DE.UTF-8
             port: 9001
             bind: foo.example
             """)
@@ -64,7 +64,7 @@ class TestConfig(TempDirMixin, unittest.TestCase):
         self.assertEqual(config.templates_dir, Path("tp"))
         self.assertEqual(config.out_dir, Path("out"))
         self.assertEqual(config.omit_dot_html, True)
-        self.assertEqual(config.locale, "en_DE.utf-16")
+        self.assertEqual(config.locale, "de_DE.UTF-8")
         self.assertEqual(config.port, 9001)
         self.assertEqual(config.bind, "foo.example")
 
@@ -77,7 +77,7 @@ class TestConfig(TempDirMixin, unittest.TestCase):
             static_dir: web
             out_dir: out
             omit_dot_html: true
-            locale: en_DE.utf-16
+            locale: de_DE.UTF-8
             port: 9001
             bind: foo.example
             """))
@@ -112,12 +112,14 @@ class TestCommand(TempDirMixin, unittest.TestCase):
             patch.object(command, "datetime") as datetime_cls,
         ):
             datetime_cls.now.return_value = datetime(2024, 5, 20, 21, 7, 0)
-            command.main(["-ss", "-oo", "-tt", "p"])
+            command.main(["-ss", "-oo", "-tt", "--locale=en_GB.UTF-8", "p"])
 
         loader_cls.assert_called_with(
             [Path("p")], include_drafts=False, now=datetime(2024, 5, 20, 21, 7, 0)
         )
-        gen_cls.assert_called_with(Path("t"), Path("s"), omit_dot_html=False)
+        gen_cls.assert_called_with(
+            Path("t"), Path("s"), omit_dot_html=False, locale="en_GB.UTF-8"
+        )
         gen_cls.return_value.render_pages.assert_called_with(
             loader_cls.return_value, Path("o")
         )
@@ -136,7 +138,7 @@ class TestCommand(TempDirMixin, unittest.TestCase):
             [Path("posts")], include_drafts=False, now=datetime(2024, 5, 20, 21, 7, 0)
         )
         gen_cls.assert_called_with(
-            Path("templates"), Path("static"), omit_dot_html=False
+            Path("templates"), Path("static"), omit_dot_html=False, locale=""
         )
         gen_cls.return_value.render_pages.assert_called_with(
             loader_cls.return_value, Path("pub")
@@ -167,5 +169,5 @@ class TestCommand(TempDirMixin, unittest.TestCase):
 
         # Then this is passed down to the generator.
         gen_cls.assert_called_with(
-            Path("templates"), Path("static"), omit_dot_html=True
+            Path("templates"), Path("static"), omit_dot_html=True, locale=""
         )

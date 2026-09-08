@@ -1,0 +1,16 @@
+<ul class="main">
+    {{#reverse_chronological}}
+    <li>
+        <a
+            href="{{dotdotslash}}{{href}}"
+            style="view-transition-name: post-{{ordinal}}"
+        >
+            <span>{{ordinal}}.</span>
+            <span>{{title}}</span>
+        </a>
+        {{#published}}
+        <time datetime="{{iso_date}}">{{day}} {{month_name}} {{year}}</time>
+        {{/published}}
+    </li>
+    {{/reverse_chronological}}
+</ul>

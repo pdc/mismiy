@@ -21,6 +21,8 @@ def tagify(term: str) -> str:
 
 class Tagging:
     pages_by_tags: dict[frozenset, list]
+    tag_labels: dict[str, str]
+    href_format: str
 
     def __init__(self, href_format="tagged/{tags}.html"):
         self.pages_by_tags = {}
@@ -30,11 +32,11 @@ class Tagging:
     def add(self, page):
         if terms := page.meta.get("tags"):
             # Reduce the labels to all-lower-case to make matching case-insensitive.
-            tags = []
+            tags = set()
             for term in terms:
                 tag = tagify(term)
                 self.tag_labels[tag] = term
-                tags.append(tag)
+                tags.add(tag)
 
             # Now index page under all combinations of tags.
             for subset in iter_subsets(tags):
@@ -49,7 +51,7 @@ class Tagging:
             len(self.pages_by_tags[frozenset((tag,))]),
         )
 
-    def pages_for_terms(self, terms: Iterable[str]) -> list:
+    def pages_for_terms(self, terms: Iterable[str]) -> list | None:
         """Return the list of pages matching these terms."""
         return self.pages_by_tags.get(frozenset(tagify(term) for term in terms))
 
@@ -77,13 +79,22 @@ class Tagging:
         Assumes tags are already tagified.
         """
         tag_set = frozenset(tags)
-        tag_count = len(tag_set) + 1  # How many tags we want in results.
-        page_count = len(self.pages_by_tags[tag_set])
-        narrowings = [
-            (k, len(pages))
-            for k, pages in self.pages_by_tags.items()
-            if k > tag_set and len(k) == tag_count and len(pages) < page_count
-        ]
+        if tag_set:
+            tag_count = len(tag_set) + 1  # How many tags we want in results.
+            page_count = len(self.pages_by_tags[tag_set])
+            narrowings = [
+                (k, len(pages))
+                for k, pages in self.pages_by_tags.items()
+                if k > tag_set and len(k) == tag_count and len(pages) < page_count
+            ]
+        else:
+            # Index page just wants all singleton tag sets.
+            narrowings = [
+                (k, len(pages))
+                for k, pages in self.pages_by_tags.items()
+                if len(k) == 1
+            ]
+
         return [
             TagInfo(self.tag_labels[next(iter(k - tag_set))], self.tags_file(k), count)
             for k, count in narrowings

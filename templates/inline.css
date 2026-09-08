@@ -7,10 +7,13 @@
 :root {
     --swiss: "Helvetica Neue", "Arial Nova", "Helvetica", "Arial", sans-serif;
     --code: "Verdana", "DejaVu Sans", "Vera Sans", sans-serif;
-    --text: "Palatino Linotype", "Palatino", "Palladio", "URW Palladio L", "Book Antiqua", serif;
+    --text:
+        "Palatino Linotype", "Palatino", "Palladio", "URW Palladio L",
+        "Book Antiqua", serif;
     --indent: 2em;
     --vgap: 0.667lh;
     --vsmall: 0.333lh;
+    --houter: 0.5rem;
 
     -webkit-text-size-adjust: 100%;
 }
@@ -25,10 +28,9 @@ body {
     background-color: Canvas;
 }
 
-body>header {
+body > header {
     border-bottom: 1px dotted CanvasText;
-    padding-top: 1rem;
-    padding-bottom: 0.5rem;
+    padding: 1rem 0.5rem 0.5rem;
 
     & .logo {
         font-size: 2em;
@@ -69,10 +71,13 @@ body>header {
 @media (min-width: 36em) {
     body {
         display: grid;
-        grid-template-columns: minmax(max-content, 1fr) 10em minmax(24em, 36em) 1fr;
+        grid-template-columns:
+            minmax(max-content, 1fr) 10em minmax(24em, 36em)
+            1fr;
         gap: 1em;
+        align-items: baseline;
 
-        &>header {
+        & > header {
             grid-column: 1 / -1;
             display: grid;
             grid-template-columns: subgrid;
@@ -96,7 +101,9 @@ body>header {
 
 @media (min-width: 48em) {
     body {
-        grid-template-columns: minmax(max-content, 1fr) minmax(10em, 12em) minmax(24em, 36em) minmax(10em, 12em) 1fr;
+        grid-template-columns:
+            minmax(max-content, 1fr) minmax(10em, 12em)
+            minmax(24em, 36em) minmax(10em, 12em) 1fr;
     }
 }
 
@@ -158,22 +165,13 @@ body>header {
         margin: 0;
         padding: 0;
         display: grid;
-        grid-template-columns: 1fr max-content;
+        grid-template-columns: auto auto;
+        justify-items: start;
+        align-items: baseline;
 
-        & li {
-            grid-column: 1 / span 2;
-            display: grid;
-            grid-template-columns: subgrid;
-
-            & a {
-                grid-column: 1 / span 2;
-                display: grid;
-                grid-template-columns: subgrid;
-
-                & span {
-                    text-align: right;
-                }
-            }
+        li,
+        a {
+            display: contents;
         }
     }
 
@@ -191,7 +189,7 @@ body>header {
             }
         }
 
-        & li+li {
+        & li + li {
             margin: 0.5lh 0;
         }
     }
@@ -208,7 +206,7 @@ body>header {
         margin-bottom: 0;
     }
 
-    & p+p {
+    & p + p {
         margin-top: var(--vgap);
     }
 
@@ -230,7 +228,7 @@ body>header {
         margin-left: var(--indent);
         line-height: 1.5;
 
-        &>code {
+        & > code {
             display: block;
         }
     }
@@ -292,8 +290,8 @@ th {
     padding-block-end: 0.125lh;
 }
 
-td+td,
-th+th {
+td + td,
+th + th {
     padding-left: 0.5em;
 }
 
@@ -301,7 +299,6 @@ th {
     font-weight: 500;
     font-style: italic;
 }
-
 
 figure {
     margin: 1lh 0;
@@ -331,4 +328,8 @@ figure {
     & p {
         max-width: 40em;
     }
+}
+
+.logo {
+    view-transition-name: "logo";
 }

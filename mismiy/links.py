@@ -1,5 +1,5 @@
 from dataclasses import dataclass, replace
-from typing import Generic, TypeVar
+from typing import Protocol, TypeVar
 
 
 @dataclass
@@ -11,21 +11,27 @@ class Link:
     ordinal: int | None = None
 
 
-TLink = TypeVar("TLink")
+class LinkBase(Protocol):
+    href: str
 
 
-def munged(link: Generic[TLink], *, omit_dot_html=False) -> TLink:
+TLink = TypeVar("TLink", bound=LinkBase)
+
+
+def munged(link: TLink, *, omit_dot_html=False) -> TLink:
     """Munge the href field of the input.
+
+    The input must be a dataclass with an attribute named `href`.
 
     If the href field does not need munging, the original object is returned.
     """
     if omit_dot_html and link.href.endswith(".html"):
-        return replace(link, href=link.href[:-5])
+        return replace(link, href=link.href[:-5])  # pyright: ignore[reportArgumentType]
     return link
 
 
 def url_relative_to(target: str, base: str) -> str:
-    """Given an URL reference, return one relativbe to base URL."""
+    """Given an URL reference, return one relative to base URL."""
 
     # ASSUMPTION. Both target and base are relative URLs.
     # Neither starts with a slash.

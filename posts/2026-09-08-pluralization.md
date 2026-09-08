@@ -1,0 +1,109 @@
+---
+
+title: Plural rules
+author: Damian Cugley
+tags:
+  - Mustache templates
+  - localization
+---
+
+Tag objects have a `count` field that is the number of pages with
+that tag. How can we arrange for the count to be followed by the
+correct form of the noun—‘1 post’ versus ‘2 posts’?
+
+## Plural forms
+
+To handle plurals, the template will contain different versions of the
+message, marked up in some way so that one is selected based on
+the value of the count.
+
+The rules for which to select are
+relatively straightforward in English—one
+message for the singular case, a second for the zero and plural cases.
+Some languages have more complicated conventions.
+The [Unicode CLDR Project] publishes (amongst other things) a database
+of language rules mapping numbers to an identifier for a plural form;
+details are in [Unicode Technical Standard #35].
+In English the tags are `one` and `other`. Other languages might
+also have `two`, `few`, `many` depending on their grammar.
+
+There is an ICU message format that uses these tags to select
+different variations on a sentence:
+
+```
+{count, plural, one{There is # post.} other{There are # posts.}}
+```
+
+We won’t be using this format directly, but will be taking some
+ideas from it.
+
+
+## How Mismiy can help
+
+We will define a lambda named `plural` in the template context.
+It expects the top of the context stack to be an integer. It then
+renders its content with new data on the stack: a tag field named
+after the plural form of the number, and the formatted number itself.
+
+The upshot is that it can be used in a template
+fragment like the following:
+
+```html
+{{#count}}
+    {{#plural}}
+        {{#one}}There is {{number}} post.{{/one}}
+        {{#other}}There are {{number}} posts.{{/other}}
+    {{/plural}}
+{{/count}}
+```
+
+Where in this case `count` is a field whose value is an integer.
+For a given value of `count`, only one of `one` or `other` will be
+true, so the other phrase will be omitted.
+
+I am not sure whether this is clever and elegant or horribly obscure
+and verbose. Fortunately it should not be needed often.
+
+How does Mismiy get the pluralization information? We can use
+[Babel], a Python package that includes an implementation of the
+CLDR plural rules. This seems a little more elegant than hard-coding
+the English plural forms in to the template.
+
+
+## More Babel
+
+Since we are adding Babel to the project, we can re-examine
+the approach taken to rendering dates (see [the post about dates]).
+This depended on the Python standard libaray’s `locale` package. Having
+having two locale implementations in one application is just going
+to create confusion, so we are switching the existing locale-sensitive
+code to use Babel as well.
+
+To this end, the `Gen` constructor has a `locale` parameter,
+which it converts to a `Locale` instance. It then passes this in to
+the methods it calls to create the context for the templates.
+The lambdas that are added to the context also
+now have the `Locale` object supplied when they are added to the context.
+We no longer call the standard library `setlocale` function.
+
+
+## Updated index pages
+
+- Add tags list to index page
+- Change to having date after title in document order
+
+To do
+- Outer margins when phone-screen-sized
+- Tagged pages
+- Make tag lists say ‘N posts’
+
+
+
+
+
+
+[Babel]: https://babel.pocoo.org/en/latest/api/core.html#babel.core.Locale.plural_form
+[Plural Rules]: https://cldr.unicode.org/index/cldr-spec/plural-rules
+[the post about dates]: ./2024-05-19-dates.html
+[Unicode CLDR Project]: https://cldr.unicode.org
+[Unicode Technical Standard #35]: https://www.unicode.org/reports/tr35/tr35-33/tr35-numbers.html#Language_Plural_Rules
