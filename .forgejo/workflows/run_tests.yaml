@@ -1,0 +1,24 @@
+on:
+- push
+jobs:
+  run_tests:
+    runs-on: codeberg-tiny
+    steps:
+    - uses: actions/checkout@v7
+    - name: Run tests
+      run: |
+        export PATH=$(pipx environment --value PIPX_BIN_DIR):$PATH
+        pipx install poetry
+        poetry install
+        poetry run python -munittest
+    - name: Build pages
+      run: |
+        export PATH=$(pipx environment --value PIPX_BIN_DIR):$PATH
+        poetry run mismiy -o /pub --omit-dot-html && echo Pages built OK
+    - name: Publish pages
+      if: ${{ forge.ref == 'refs/heads/main'}}
+      uses: https://codeberg.org/git-pages/action@v2
+      with:
+        site: https://${{ forge.repository_owner }}.codeberg.page/mismiy/
+        token: ${{ forge.token }}
+        source: /pub
