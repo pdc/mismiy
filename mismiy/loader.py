@@ -335,7 +335,7 @@ class Source:
 
     @property
     def url(self):
-        return self.meta["url"]
+        return self.meta.get("url")
 
     @property
     def icon(self):
