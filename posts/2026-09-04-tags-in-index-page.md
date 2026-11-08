@@ -45,19 +45,40 @@ For a really long list a searchable user interface might be nice
 user use their web browser’s search-in-page feature).
 
 
-
 ## How Mismiy can help
 
-The code that expands the list of tags labels (on the page) into
-a list of info objects. This means that the page references in the
-`reverse_chronological` list will be a subset of the pages used when
-rendering the page proper (that is, the fields it does have are the
-same as the same-named field in the Page objects).
+In the template context for the index page, the page references in the
+`reverse_chronological` list are not complete pages (since the content of the
+page is not required). But the fields that the references do have are generally
+the same as the same-named field in the page proper (that is, the `title`
+in the page reference is the same as the `title` when rendering the page itself).
 
-We can supply the tags as a field named `tags` and `tags_json`.
-I considered trying to create a lambda for conversion to JSON,
+One exception was the `tags` field. It was present, but it was just a copy
+of the field from the YAML front matter of the page, rather than the `TagInfo`
+objects used on the real page. So the change required here was to bring this
+field in line with the convention that the page-reference fields are a proper
+subset of the page fields. In the Python code this meant rearranging the
+code for generating the context so that the same function provides both.
+
+We also add a `tags_json` field. This can be used to pass the tag info in to
+some JavaScript that produces a flashy user interface to the tag list.
+(I considered trying to create a template lambda for conversion to JSON,
 but  the techniques in [the post about lambdas] won’t work if the
-data is a list (because of the way Mustache’s rules about sections
-work).
+data is a list because of the way Mustache’s rules about sections
+work.)
 
-[the post about lambdas]: ./2026-07-19-lambdas
+
+## Changes to the index page
+
+After all this, I did not use the elaborate tag-cloud or tag-selection user interface
+approaches: at present the tag list on the index page for this blog is short
+enough that there is no point. But the data is available in the template context
+for when I do want to.
+
+The tag list is shown as a plain list to the right of the blog index—or just below
+it on small screens. The tags are augmented with the post count so the reader
+gets an idea of which ones narrow down the index the most. More about that in
+[the next post].
+
+[the post about lambdas]: ./2026-07-19-lambdas.html
+[the next post]: ./2026-09-08-pluralization.html

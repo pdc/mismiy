@@ -4,6 +4,7 @@ h1 {
     font-family: var(--swiss);
     margin: 1lh 0 0.5lh;
 }
+
 h1.logo {
     font-size: 3rem;
 }
@@ -23,17 +24,23 @@ ul.main {
         --houter: 0.5rem;
 
         margin-top: 2lh;
+
         h1 {
             margin: 2lh var(--houter) 1lh;
         }
-        h2 {
-            margin: 1lh var(--houter) 0.5lh;
-            font-size: 1.5em;
-        }
+
         p {
             margin: 1lh var(--houter);
         }
     }
+
+    section h2,
+    nav h2 {
+        margin: 1lh var(--houter) 0.5lh;
+        font-size: 1.5em;
+
+    }
+
     ul.main {
         margin: var(--vsmall) var(--houter);
         display: grid;
@@ -44,6 +51,7 @@ ul.main {
             grid-column: 1 / -1;
             display: grid;
             grid-template-columns: subgrid;
+
             a {
                 grid-column: 1 / -1;
                 display: grid;
@@ -53,6 +61,7 @@ ul.main {
                     justify-self: end;
                 }
             }
+
             time {
                 grid-column: 2 / -1;
                 display: block;
@@ -66,6 +75,7 @@ ul.main {
     section.text {
         grid-column: 2 / span 2;
     }
+
     section.reverseChronological {
         grid-column: 2 / span 2;
         display: grid;
@@ -74,6 +84,7 @@ ul.main {
         h2 {
             grid-column: 1 / -1;
         }
+
         ul {
             grid-column: 1 / -1;
             display: grid;
@@ -84,16 +95,20 @@ ul.main {
             margin: 0;
             padding: 0;
         }
+
         li {
             display: contents;
         }
+
         a {
             grid-column: 2;
         }
+
         time {
             grid-column: 1;
         }
     }
+
     nav.tagReferences {
         grid-column: 2 / span 2;
 
@@ -110,12 +125,14 @@ ul.main {
             margin: 0;
             padding: 0;
         }
+
         li,
         a {
             display: contents;
         }
     }
 }
+
 @media (min-width: 48em) {
     nav.tagReferences {
         grid-column: 4 / -1;

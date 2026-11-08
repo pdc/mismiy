@@ -25,6 +25,7 @@ title: Dash dash dash
 author: Damian Cugley
 
 The format for a page or post in Mismiy is a Markdown body with a header that
+contains some metadata about the page. Other software uses a slightly different
 ```
 
 Where Mismiy departs from RFC 822 is that the values can be [StrictYAML] structures,
@@ -62,6 +63,7 @@ tags:
 - Mismiy command
 ---
 The format for a page or post in Mismiy is a Markdown body with a header that
+contains some metadata about the page. Other software uses a slightly different
 ```
 
 The great thing about this is (a) it is easy to check a file to see whether this
