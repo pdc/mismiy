@@ -13,32 +13,23 @@ dependencies = [
     "watchdog >= 4.0.0, < 5.0",
     "babel (>=2.18.0,<3.0.0)",
 ]
-requires-python = ">= 3.10, < 4"
+requires-python = ">= 3.11, < 4"
 
 [project.urls]
 homepage = "https://mismiy.dev"
 source = "https://github.com/pdc/mismiy"
 changelog = "https://raw.githubusercontent.com/pdc/mismiy/refs/heads/develop/CHANGELOG.md"
 
-[tool.poetry]
-
-
-[tool.poetry.dependencies]
-python = "^3.13"
-
-
-[tool.poetry.group.dev.dependencies]
-black = "^26.5.1"
-flake8 = "^7.3.0"
-isort = "^8.0.1"
-pytest = "^9.1.1"
-
-[tool.poetry.scripts]
+[project.scripts]
 mismiy = 'mismiy.command:main'
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "black (>=26.10.1,<27.0.0)",
+    "flake8 (>=7.5.0,<8.0.0)",
+    "isort (>=9.0.2,<10.0.0)",
+    "pytest (>=9.2.0,<10.0.0)",
+]
 
 [tool.isort]
 profile = "black"
@@ -47,3 +38,7 @@ profile = "black"
 # On of: off", "basic", "standard", "strict", "recommended", "all"
 typeCheckingMode = "standard"
 reportUnusedCallResult = false
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
